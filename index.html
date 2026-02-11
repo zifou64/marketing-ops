@@ -68,19 +68,21 @@
             outline: none;
         }
 
-        .filter-btn {
-            transition: all 0.2s ease;
-            position: relative;
-        }
-
         .active-pill {
             background: white;
             color: black !important;
         }
 
-        /* Apple-style Progress Bar */
-        #progress-bar {
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+        #loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
         }
 
         ::-webkit-scrollbar { width: 0px; }
@@ -88,12 +90,18 @@
 </head>
 <body class="min-h-screen pb-20">
 
+    <!-- Cloud Sync Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="w-12 h-12 border-2 border-white/20 border-t-white rounded-full animate-spin mb-4"></div>
+        <p class="text-[10px] font-bold tracking-[0.3em] text-white/40 uppercase">Syncing Team Data</p>
+    </div>
+
     <div class="max-w-3xl mx-auto px-6 pt-16">
         <!-- Header -->
         <header class="mb-12 text-center">
             <div class="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white/5 border border-white/10">
-                <i data-lucide="shield-check" class="w-4 h-4 text-sky-400"></i>
-                <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-white/60">Core Dashboard 2026</span>
+                <i data-lucide="users" class="w-4 h-4 text-sky-400"></i>
+                <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-white/60">Team Shared Workspace</span>
             </div>
             <h1 class="text-5xl font-semibold tracking-tight mb-4 bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent italic">
                 Marketing Roadmap
@@ -101,7 +109,7 @@
             <p class="text-sm text-white/40 font-medium tracking-wide">Wednesday, Feb 11, 2026</p>
         </header>
 
-        <!-- Stats Grid (Compact Apple Style) -->
+        <!-- Stats Grid -->
         <div class="grid grid-cols-4 gap-3 mb-10">
             <div class="glass p-4 rounded-3xl text-center">
                 <p class="text-[10px] uppercase tracking-wider text-white/40 mb-1">Urgent</p>
@@ -116,8 +124,8 @@
                 <p id="stat-completed" class="text-2xl font-semibold text-emerald-400">0</p>
             </div>
             <div class="glass p-4 rounded-3xl text-center">
-                <p class="text-[10px] uppercase tracking-wider text-white/40 mb-1">Status</p>
-                <p class="text-[10px] font-bold text-sky-400 mt-2">ONLINE</p>
+                <p class="text-[10px] uppercase tracking-wider text-white/40 mb-1 text-[8px]">Cloud Sync</p>
+                <div id="sync-indicator" class="w-2 h-2 rounded-full bg-emerald-500 mx-auto mt-3 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
             </div>
         </div>
 
@@ -135,7 +143,7 @@
         <!-- Filters -->
         <div class="flex items-center justify-between mb-6">
             <div id="filter-container" class="flex bg-white/5 p-1 rounded-2xl border border-white/5"></div>
-            <button onclick="toggleAddForm()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white text-black hover:scale-105 transition-transform active:scale-95">
+            <button onclick="toggleAddForm()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white text-black hover:scale-105 transition-transform active:scale-95 shadow-xl shadow-white/10">
                 <i data-lucide="plus" class="w-5 h-5"></i>
             </button>
         </div>
@@ -147,11 +155,11 @@
                 <div class="flex justify-between items-center">
                     <select id="new-task-category" class="bg-white/10 border-none rounded-xl px-4 py-2 text-xs text-white outline-none">
                         <option value="Urgent">Urgent</option>
-                        <option value="Technical">Technical</option>
+                        <option value="Technical" selected>Technical</option>
                         <option value="Creative">Creative</option>
                         <option value="Strategy">Strategy</option>
                     </select>
-                    <button type="submit" class="bg-white text-black px-6 py-2 rounded-full text-xs font-bold hover:bg-zinc-200 transition-colors">Create Task</button>
+                    <button type="submit" class="bg-white text-black px-6 py-2 rounded-full text-xs font-bold hover:bg-zinc-200 transition-colors">Create Shared Task</button>
                 </div>
             </form>
         </div>
@@ -160,124 +168,176 @@
         <div id="task-list" class="space-y-3"></div>
 
         <div class="mt-12 text-center">
-            <button onclick="resetToDefaults()" class="text-[10px] text-white/20 hover:text-red-400 uppercase tracking-[0.3em] font-bold transition-colors">
-                Factory Reset Dashboard
+            <p class="text-[9px] text-white/20 uppercase tracking-[0.3em] font-medium mb-4">Real-time collaboration active</p>
+            <button onclick="resetSharedTasks()" class="text-[10px] text-white/10 hover:text-red-400/60 uppercase tracking-[0.3em] font-bold transition-colors">
+                Clear Shared Data
             </button>
         </div>
     </div>
 
-    <script>
-        const STORAGE_KEY = 'marketing_ops_pro_2026_apple';
-        const CATEGORIES = ["All", "Urgent", "Technical", "Creative", "Strategy"];
+    <!-- Firebase Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, serverTimestamp, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Environment Config
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'marketing-ops-team-2026';
+        
+        // App State
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
         let tasks = [];
         let currentFilter = "All";
         let editingId = null;
+        const CATEGORIES = ["All", "Urgent", "Technical", "Creative", "Strategy"];
 
-        const DEFAULT_TASKS = [
-            { id: 1, text: "Enable WhatsApp in Meta", category: "Urgent", completed: false },
-            { id: 2, text: "Pierre: Reactivate WhatsApp Groups", category: "Urgent", completed: false },
-            { id: 3, text: "builderallworks: Fix Google tracking", category: "Technical", completed: false },
-            { id: 4, text: "emailmarketingmastery: Fix Google tracking", category: "Technical", completed: false },
-            { id: 5, text: "Optimize Google Ads (Intent Signals)", category: "Technical", completed: false },
-            { id: 6, text: "Email Lead Flow Automation", category: "Technical", completed: false },
-            { id: 7, text: "Real VSL Production", category: "Creative", completed: false },
-            { id: 8, text: "Social Proof: Add 'X websites generated' stats", category: "Creative", completed: false },
-            { id: 9, text: "Supercharge Bundle: Add specific paragraph", category: "Creative", completed: false },
-            { id: 10, text: "Supercharge Bundle: Website Builder AD", category: "Creative", completed: false },
-            { id: 11, text: "Test AI Video (IG Reference)", category: "Creative", completed: false },
-            { id: 12, text: "Word Replace in Ads (Bulk Update)", category: "Strategy", completed: false },
-            { id: 13, text: "7 Dollar Sales Tripwire Review", category: "Strategy", completed: false },
-            { id: 14, text: "Analyze Winning AI Ads performance", category: "Strategy", completed: false },
-            { id: 15, text: "Template Expansion: New Landing Pages", category: "Strategy", completed: false },
-            { id: 16, text: "Implement New Ad Structure (FB Reference)", category: "Strategy", completed: false }
-        ];
-
-        function loadTasks() {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                try { tasks = JSON.parse(saved); } catch (e) { tasks = [...DEFAULT_TASKS]; }
-            } else { tasks = [...DEFAULT_TASKS]; }
-        }
-
-        function saveTasks() {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-        }
-
-        function resetToDefaults() {
-            if(confirm("This will erase all custom tasks. Reset?")) {
-                tasks = [...DEFAULT_TASKS];
-                saveTasks();
-                renderTasks();
-                updateStats();
+        // 1. Initial Authentication (Rule 3)
+        async function startApp() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Auth failed:", err);
+                document.getElementById('loading-overlay').innerHTML = `<p class="text-red-500">Connection Error. Refresh.</p>`;
             }
         }
 
-        function handleAddTask(e) {
+        // 2. Real-time Listening (Shared Data - Rule 1)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Use a shared path so all users in this appId see the same tasks
+                const tasksRef = collection(db, 'artifacts', appId, 'public', 'data', 'team_tasks');
+                
+                onSnapshot(query(tasksRef), (snapshot) => {
+                    tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    
+                    // Seed if empty (First time use)
+                    if (tasks.length === 0) {
+                        seedDefaultTasks();
+                    }
+
+                    renderFilters();
+                    renderTasks();
+                    updateStats();
+                    
+                    // Hide loader
+                    const loader = document.getElementById('loading-overlay');
+                    if(loader) {
+                        loader.style.opacity = '0';
+                        setTimeout(() => loader.remove(), 500);
+                    }
+                }, (err) => {
+                    console.error("Sync error:", err);
+                });
+            }
+        });
+
+        async function seedDefaultTasks() {
+            const defaults = [
+                { text: "Enable WhatsApp in Meta", category: "Urgent", completed: false },
+                { text: "Pierre: Reactivate WhatsApp Groups", category: "Urgent", completed: false },
+                { text: "builderallworks: Fix Google tracking", category: "Technical", completed: false },
+                { text: "Email Lead Flow Automation", category: "Technical", completed: false },
+                { text: "Real VSL Production", category: "Creative", completed: false },
+                { text: "Supercharge Bundle: Website Builder AD", category: "Creative", completed: false },
+                { text: "Analyze Winning AI Ads performance", category: "Strategy", completed: false },
+                { text: "Implement New Ad Structure (FB Reference)", category: "Strategy", completed: false }
+            ];
+            const tasksRef = collection(db, 'artifacts', appId, 'public', 'data', 'team_tasks');
+            for (const t of defaults) {
+                await addDoc(tasksRef, { ...t, createdAt: serverTimestamp() });
+            }
+        }
+
+        // 3. Database Actions
+        window.handleAddTask = async (e) => {
             e.preventDefault();
             const input = document.getElementById('new-task-input');
             const category = document.getElementById('new-task-category').value;
-            if (!input.value.trim()) return;
-            tasks.unshift({ id: Date.now(), text: input.value.trim(), category: category, completed: false });
+            const text = input.value.trim();
+            if (!text || !auth.currentUser) return;
+
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'team_tasks'), {
+                text,
+                category,
+                completed: false,
+                createdAt: serverTimestamp()
+            });
+
             input.value = '';
             toggleAddForm();
-            saveTasks();
-            renderTasks();
-            updateStats();
-        }
+        };
 
-        function toggleTask(id) {
-            tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
-            saveTasks();
-            renderTasks();
-            updateStats();
-        }
+        window.toggleTask = async (id) => {
+            const task = tasks.find(t => t.id === id);
+            if (!task || !auth.currentUser) return;
+            const taskRef = doc(db, 'artifacts', appId, 'public', 'data', 'team_tasks', id);
+            await updateDoc(taskRef, { completed: !task.completed });
+        };
 
-        function deleteTask(id) {
-            tasks = tasks.filter(t => t.id !== id);
-            saveTasks();
-            renderTasks();
-            updateStats();
-        }
+        window.deleteTask = async (id) => {
+            if (!auth.currentUser) return;
+            const taskRef = doc(db, 'artifacts', appId, 'public', 'data', 'team_tasks', id);
+            await deleteDoc(taskRef);
+        };
 
-        function enterEditMode(id) {
+        window.saveEdit = async (id) => {
+            const input = document.getElementById(`edit-${id}`);
+            if (input && auth.currentUser) {
+                const newText = input.value.trim();
+                if (newText) {
+                    const taskRef = doc(db, 'artifacts', appId, 'public', 'data', 'team_tasks', id);
+                    await updateDoc(taskRef, { text: newText });
+                }
+            }
+            editingId = null;
+            renderTasks();
+        };
+
+        window.resetSharedTasks = async () => {
+            if(confirm("This will clear the roadmap for the WHOLE TEAM. Continue?")) {
+                const tasksRef = collection(db, 'artifacts', appId, 'public', 'data', 'team_tasks');
+                const snapshot = await getDocs(tasksRef);
+                const batch = writeBatch(db);
+                snapshot.docs.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                seedDefaultTasks();
+            }
+        };
+
+        // UI Logic
+        window.enterEditMode = (id) => {
             editingId = id;
             renderTasks();
             setTimeout(() => {
                 const input = document.getElementById(`edit-${id}`);
                 if(input) { input.focus(); input.select(); }
             }, 50);
-        }
+        };
 
-        function saveEdit(id) {
-            const input = document.getElementById(`edit-${id}`);
-            if (input) {
-                const newText = input.value.trim();
-                if (newText) {
-                    tasks = tasks.map(t => t.id === id ? { ...t, text: newText } : t);
-                    saveTasks();
-                }
-            }
-            editingId = null;
-            renderTasks();
-        }
+        window.setFilter = (cat) => { currentFilter = cat; renderFilters(); renderTasks(); };
+        window.toggleAddForm = () => document.getElementById('add-task-form').classList.toggle('hidden');
 
         function renderFilters() {
             const container = document.getElementById('filter-container');
             container.innerHTML = CATEGORIES.map(cat => `
-                <button onclick="setFilter('${cat}')" class="filter-btn px-4 py-1.5 rounded-xl text-[11px] font-semibold transition-all whitespace-nowrap ${currentFilter === cat ? "active-pill shadow-lg" : "text-white/40 hover:text-white"}">${cat.toUpperCase()}</button>
+                <button onclick="setFilter('${cat}')" class="px-4 py-1.5 rounded-xl text-[11px] font-semibold transition-all ${currentFilter === cat ? "active-pill shadow-lg" : "text-white/40 hover:text-white"}">${cat.toUpperCase()}</button>
             `).join('');
         }
-
-        function setFilter(cat) { currentFilter = cat; renderFilters(); renderTasks(); }
-
-        function toggleAddForm() { document.getElementById('add-task-form').classList.toggle('hidden'); }
 
         function renderTasks() {
             const container = document.getElementById('task-list');
             const filtered = tasks.filter(t => currentFilter === "All" || t.category === currentFilter);
             
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-20 opacity-20 text-xs tracking-widest uppercase">No tasks in ${currentFilter}</div>`;
+                container.innerHTML = `<div class="text-center py-20 opacity-20 text-xs tracking-widest uppercase">No shared tasks in ${currentFilter}</div>`;
                 return;
             }
 
@@ -292,29 +352,26 @@
                 const colorClass = categoryStyles[task.category] || 'text-white/40';
 
                 return `
-                    <div class="task-card glass flex items-center gap-4 p-5 rounded-[1.5rem] ${task.completed ? "opacity-40" : ""}">
-                        <button onclick="toggleTask(${task.id})" class="checkbox-custom ${task.completed ? "checkbox-checked" : ""}">
+                    <div class="task-card glass flex items-center gap-4 p-5 rounded-[1.5rem] ${task.completed ? "opacity-30" : ""}">
+                        <button onclick="toggleTask('${task.id}')" class="checkbox-custom ${task.completed ? "checkbox-checked" : ""}">
                             ${task.completed ? '<i data-lucide="check" class="w-3 h-3 text-black stroke-[4px]"></i>' : ''}
                         </button>
                         
                         <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-0.5">
-                                <span class="text-[9px] font-black uppercase tracking-[0.2em] ${colorClass}">${task.category}</span>
-                            </div>
-                            
+                            <span class="text-[9px] font-black uppercase tracking-[0.2em] ${colorClass}">${task.category}</span>
                             ${isEditing ? `
                                 <input id="edit-${task.id}" type="text" value="${task.text}" 
-                                    onblur="saveEdit(${task.id})" 
-                                    onkeydown="if(event.key==='Enter') saveEdit(${task.id})"
-                                    class="edit-input" />
+                                    onblur="saveEdit('${task.id}')" 
+                                    onkeydown="if(event.key==='Enter') saveEdit('${task.id}')"
+                                    class="edit-input mt-1" />
                             ` : `
-                                <p onclick="enterEditMode(${task.id})" class="text-base font-medium truncate cursor-text ${task.completed ? "line-through text-white/30" : "text-white/90"}">
+                                <p onclick="enterEditMode('${task.id}')" class="text-base font-medium truncate cursor-text mt-0.5 ${task.completed ? "line-through text-white/30" : "text-white/90"}">
                                     ${task.text}
                                 </p>
                             `}
                         </div>
 
-                        <button onclick="deleteTask(${task.id})" class="opacity-0 group-hover:opacity-100 p-2 text-white/20 hover:text-red-500 transition-all">
+                        <button onclick="deleteTask('${task.id}')" class="opacity-0 group-hover:opacity-100 p-2 text-white/20 hover:text-red-500 transition-all">
                             <i data-lucide="x" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -328,19 +385,14 @@
             const done = tasks.filter(t => t.completed).length;
             const progress = total > 0 ? Math.round((done / total) * 100) : 0;
             document.getElementById('progress-bar').style.width = `${progress}%`;
-            document.getElementById('progress-text').innerText = `${progress}% Complete`;
-            document.getElementById('task-count-text').innerText = `${done} / ${total} Tasks`;
+            document.getElementById('progress-text').innerText = `${progress}% Team Progress`;
+            document.getElementById('task-count-text').innerText = `${done} / ${total} Shared Tasks`;
             document.getElementById('stat-urgent').innerText = tasks.filter(t => t.category === "Urgent" && !t.completed).length;
             document.getElementById('stat-queue').innerText = tasks.filter(t => !t.completed).length;
             document.getElementById('stat-completed').innerText = done;
         }
 
-        window.onload = () => {
-            loadTasks();
-            renderFilters();
-            renderTasks();
-            updateStats();
-        };
+        startApp();
     </script>
 </body>
 </html>
