@@ -107,7 +107,6 @@
         let currentFilter = "All";
         let editingId = null;
 
-        // Fail-safe timer
         const timer = setTimeout(() => {
             document.getElementById('loader-text').innerText = "Sync delayed. Check Anonymous Auth.";
             document.getElementById('skip-btn').classList.remove('hidden');
@@ -144,14 +143,36 @@
 
         async function seedInitialTasks() {
             const originalTasks = [
+                // Urgent
                 { text: "Enable WhatsApp in Meta", category: "Urgent", completed: false },
                 { text: "Pierre: Reactivate WhatsApp Groups", category: "Urgent", completed: false },
+                
+                // Technical
                 { text: "builderallworks: Fix Google tracking", category: "Technical", completed: false },
+                { text: "emailmarketingmastery: Fix Google tracking", category: "Technical", completed: false },
+                { text: "Optimize Google Ads (Intent Signals)", category: "Technical", completed: false },
+                { text: "Email Lead Flow Automation", category: "Technical", completed: false },
+                { text: "Small Business Page: Magic Funnel captures", category: "Technical", completed: false },
+                
+                // Creative
                 { text: "Real VSL Production", category: "Creative", completed: false },
+                { text: "Social Proof: Add website/subs stats", category: "Creative", completed: false },
+                { text: "Supercharge Bundle: Add specific paragraph", category: "Creative", completed: false },
+                { text: "Supercharge Bundle: Website Builder AD", category: "Creative", completed: false },
+                { text: "Test AI Video (IG Reference)", category: "Creative", completed: false },
+                { text: "Bulk Word Replace in Ads", category: "Creative", completed: false },
+                
+                // Strategy
+                { text: "Analyze Winning AI Ads performance", category: "Strategy", completed: false },
+                { text: "Template Expansion: Landing Pages", category: "Strategy", completed: false },
+                { text: "7 Dollar Sales Tripwire Review", category: "Strategy", completed: false },
                 { text: "Implement New Ad Structure", category: "Strategy", completed: false }
             ];
             for (const t of originalTasks) {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'), { ...t, createdAt: serverTimestamp() });
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'), { 
+                    ...t, 
+                    createdAt: serverTimestamp() 
+                });
             }
         }
 
@@ -173,6 +194,7 @@
         };
 
         window.deleteTask = async (id) => {
+            // String ID for direct Firebase match
             await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', String(id)));
         };
 
@@ -229,7 +251,7 @@
             const progress = total > 0 ? Math.round((done/total)*100) : 0;
             document.getElementById('progress-bar').style.width = `${progress}%`;
             document.getElementById('progress-text').innerText = `${progress}% Team Progress`;
-            document.getElementById('task-count-text').innerText = `${done}/${total} Shared Items`;
+            document.getElementById('task-count-text').innerText = `${done}/${total} Items`;
             document.getElementById('stat-urgent').innerText = tasks.filter(t => t.category === "Urgent" && !t.completed).length;
             document.getElementById('stat-queue').innerText = tasks.filter(t => !t.completed).length;
             document.getElementById('stat-completed').innerText = done;
