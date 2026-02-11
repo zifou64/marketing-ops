@@ -12,15 +12,15 @@
         :root {
             --apple-bg: #000000;
             --apple-card: rgba(28, 28, 30, 0.7);
-            --apple-border: rgba(255, 255, 255, 0.1);
+            --apple-border: rgba(255, 255, 255, 0.08);
         }
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--apple-bg);
             background-image: 
-                radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.15) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.1) 0px, transparent 50%);
+                radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.08) 0px, transparent 50%);
             background-attachment: fixed;
             color: #ffffff;
             -webkit-font-smoothing: antialiased;
@@ -28,29 +28,31 @@
 
         .glass {
             background: var(--apple-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--apple-border);
         }
 
         .task-card {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .task-card:hover {
-            background: rgba(44, 44, 46, 0.8);
+            background: rgba(44, 44, 46, 0.6);
             transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.15);
         }
 
         .checkbox-custom {
             width: 24px;
             height: 24px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            border: 1.5px solid rgba(255, 255, 255, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
+            cursor: pointer;
         }
 
         .checkbox-checked {
@@ -60,12 +62,13 @@
 
         .edit-input {
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-            padding: 2px 8px;
+            border-radius: 8px;
+            padding: 4px 12px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: white;
             width: 100%;
             outline: none;
+            font-size: 1rem;
         }
 
         .active-pill {
@@ -82,7 +85,13 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.6s ease;
+        }
+
+        /* Fixed the readability of the select dropdown options */
+        select option {
+            background-color: #1c1c1e;
+            color: white;
         }
 
         ::-webkit-scrollbar { width: 0px; }
@@ -92,100 +101,100 @@
 
     <!-- Cloud Sync Loading Overlay -->
     <div id="loading-overlay">
-        <div class="w-12 h-12 border-2 border-white/20 border-t-white rounded-full animate-spin mb-4"></div>
-        <p class="text-[10px] font-bold tracking-[0.3em] text-white/40 uppercase">Syncing Team Data</p>
+        <div class="w-10 h-10 border-2 border-white/10 border-t-white rounded-full animate-spin mb-4"></div>
+        <p class="text-[10px] font-bold tracking-[0.4em] text-white/30 uppercase">Secure Workspace</p>
     </div>
 
     <div class="max-w-3xl mx-auto px-6 pt-16">
         <!-- Header -->
-        <header class="mb-12 text-center">
-            <div class="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white/5 border border-white/10">
-                <i data-lucide="users" class="w-4 h-4 text-sky-400"></i>
-                <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-white/60">Team Shared Workspace</span>
+        <header class="mb-14 text-center">
+            <div class="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white/5 border border-white/10 shadow-sm">
+                <i data-lucide="globe" class="w-3.5 h-3.5 text-sky-400"></i>
+                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-white/50">Shared Infrastructure 2026</span>
             </div>
-            <h1 class="text-5xl font-semibold tracking-tight mb-4 bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent italic">
-                Marketing Roadmap
+            <h1 class="text-6xl font-semibold tracking-tight mb-4 bg-gradient-to-b from-white to-white/50 bg-clip-text text-transparent italic">
+                Roadmap
             </h1>
-            <p class="text-sm text-white/40 font-medium tracking-wide">Wednesday, Feb 11, 2026</p>
+            <p id="current-date" class="text-sm text-white/30 font-medium tracking-wide lowercase"></p>
         </header>
 
-        <!-- Stats Grid -->
-        <div class="grid grid-cols-4 gap-3 mb-10">
-            <div class="glass p-4 rounded-3xl text-center">
-                <p class="text-[10px] uppercase tracking-wider text-white/40 mb-1">Urgent</p>
-                <p id="stat-urgent" class="text-2xl font-semibold text-red-500">0</p>
+        <!-- Stats Row -->
+        <div class="grid grid-cols-4 gap-4 mb-12">
+            <div class="glass p-5 rounded-[2rem] text-center shadow-2xl">
+                <p class="text-[10px] uppercase tracking-widest text-white/30 mb-1">Urgent</p>
+                <p id="stat-urgent" class="text-2xl font-light text-red-500">0</p>
             </div>
-            <div class="glass p-4 rounded-3xl text-center">
-                <p class="text-[10px] uppercase tracking-wider text-white/40 mb-1">Queue</p>
-                <p id="stat-queue" class="text-2xl font-semibold">0</p>
+            <div class="glass p-5 rounded-[2rem] text-center shadow-2xl">
+                <p class="text-[10px] uppercase tracking-widest text-white/30 mb-1">Queue</p>
+                <p id="stat-queue" class="text-2xl font-light">0</p>
             </div>
-            <div class="glass p-4 rounded-3xl text-center">
-                <p class="text-[10px] uppercase tracking-wider text-white/40 mb-1">Done</p>
-                <p id="stat-completed" class="text-2xl font-semibold text-emerald-400">0</p>
+            <div class="glass p-5 rounded-[2rem] text-center shadow-2xl">
+                <p class="text-[10px] uppercase tracking-widest text-white/30 mb-1">Done</p>
+                <p id="stat-completed" class="text-2xl font-light text-emerald-400">0</p>
             </div>
-            <div class="glass p-4 rounded-3xl text-center">
-                <p class="text-[10px] uppercase tracking-wider text-white/40 mb-1 text-[8px]">Cloud Sync</p>
-                <div id="sync-indicator" class="w-2 h-2 rounded-full bg-emerald-500 mx-auto mt-3 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
-            </div>
-        </div>
-
-        <!-- Progress Section -->
-        <div class="mb-10 px-2">
-            <div class="flex justify-between items-end mb-2">
-                <span id="progress-text" class="text-xs font-semibold text-white/60 uppercase tracking-widest">0% Complete</span>
-                <span id="task-count-text" class="text-[10px] font-medium text-white/30 uppercase tracking-widest">0 / 0 Tasks</span>
-            </div>
-            <div class="bg-white/5 h-[6px] rounded-full overflow-hidden border border-white/5">
-                <div id="progress-bar" class="bg-white h-full transition-all duration-700 ease-out" style="width: 0%"></div>
+            <div class="glass p-5 rounded-[2rem] text-center flex flex-col items-center justify-center">
+                <p class="text-[9px] uppercase tracking-widest text-white/20 mb-1">Sync</p>
+                <div id="sync-indicator" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_12px_rgba(52,199,89,0.4)]"></div>
             </div>
         </div>
 
-        <!-- Filters -->
-        <div class="flex items-center justify-between mb-6">
+        <!-- Team Progress -->
+        <div class="mb-12 px-2">
+            <div class="flex justify-between items-end mb-3">
+                <span id="progress-text" class="text-xs font-bold text-white/50 uppercase tracking-widest">0% Complete</span>
+                <span id="task-count-text" class="text-[10px] font-medium text-white/20 uppercase tracking-widest">0 Shared Items</span>
+            </div>
+            <div class="bg-white/5 h-[4px] rounded-full overflow-hidden">
+                <div id="progress-bar" class="bg-white h-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="flex items-center justify-between mb-8">
             <div id="filter-container" class="flex bg-white/5 p-1 rounded-2xl border border-white/5"></div>
-            <button onclick="toggleAddForm()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white text-black hover:scale-105 transition-transform active:scale-95 shadow-xl shadow-white/10">
+            <button onclick="toggleAddForm()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white text-black hover:scale-110 transition-all active:scale-95 shadow-xl">
                 <i data-lucide="plus" class="w-5 h-5"></i>
             </button>
         </div>
 
-        <!-- Add Form -->
-        <div id="add-task-form" class="hidden mb-8 glass p-6 rounded-[2rem] animate-in fade-in zoom-in duration-300">
-            <form onsubmit="handleAddTask(event)" class="space-y-4">
-                <input id="new-task-input" type="text" placeholder="Task description..." class="w-full bg-transparent text-xl font-medium outline-none border-b border-white/10 pb-2 focus:border-white/40 transition-colors" />
+        <!-- Input Area (Fixed visibility) -->
+        <div id="add-task-form" class="hidden mb-10 glass p-8 rounded-[2.5rem] animate-in fade-in slide-in-from-top-4 duration-500 shadow-2xl">
+            <form onsubmit="handleAddTask(event)" class="space-y-6">
+                <input id="new-task-input" type="text" placeholder="Add shared task..." class="w-full bg-transparent text-2xl font-light outline-none border-b border-white/10 pb-4 focus:border-white/40 transition-colors placeholder:text-white/10" />
                 <div class="flex justify-between items-center">
-                    <select id="new-task-category" class="bg-white/10 border-none rounded-xl px-4 py-2 text-xs text-white outline-none">
-                        <option value="Urgent">Urgent</option>
-                        <option value="Technical" selected>Technical</option>
-                        <option value="Creative">Creative</option>
-                        <option value="Strategy">Strategy</option>
-                    </select>
-                    <button type="submit" class="bg-white text-black px-6 py-2 rounded-full text-xs font-bold hover:bg-zinc-200 transition-colors">Create Shared Task</button>
+                    <div class="relative">
+                        <select id="new-task-category" class="appearance-none bg-white/5 hover:bg-white/10 border border-white/5 rounded-2xl px-5 py-2.5 text-xs text-white/80 outline-none cursor-pointer transition-all pr-10">
+                            <option value="Urgent">Urgent</option>
+                            <option value="Technical" selected>Technical</option>
+                            <option value="Creative">Creative</option>
+                            <option value="Strategy">Strategy</option>
+                        </select>
+                        <i data-lucide="chevron-down" class="w-3 h-3 absolute right-4 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none"></i>
+                    </div>
+                    <button type="submit" class="bg-white text-black px-8 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:bg-zinc-200 transition-all">Publish</button>
                 </div>
             </form>
         </div>
 
-        <!-- Task List -->
-        <div id="task-list" class="space-y-3"></div>
+        <!-- Task Feed -->
+        <div id="task-list" class="space-y-4"></div>
 
-        <div class="mt-12 text-center">
-            <p class="text-[9px] text-white/20 uppercase tracking-[0.3em] font-medium mb-4">Real-time collaboration active</p>
-            <button onclick="resetSharedTasks()" class="text-[10px] text-white/10 hover:text-red-400/60 uppercase tracking-[0.3em] font-bold transition-colors">
-                Clear Shared Data
+        <div class="mt-20 text-center opacity-20 hover:opacity-100 transition-opacity">
+            <button onclick="resetSharedTasks()" class="text-[9px] uppercase tracking-[0.4em] font-bold text-white/50">
+                Wipe Shared Database
             </button>
         </div>
     </div>
 
-    <!-- Firebase Integration -->
+    <!-- Firebase -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, serverTimestamp, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Environment Config
         const firebaseConfig = JSON.parse(__firebase_config);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'marketing-ops-team-2026';
         
-        // App State
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
@@ -195,7 +204,6 @@
         let editingId = null;
         const CATEGORIES = ["All", "Urgent", "Technical", "Creative", "Strategy"];
 
-        // 1. Initial Authentication (Rule 3)
         async function startApp() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -204,38 +212,28 @@
                     await signInAnonymously(auth);
                 }
             } catch (err) {
-                console.error("Auth failed:", err);
-                document.getElementById('loading-overlay').innerHTML = `<p class="text-red-500">Connection Error. Refresh.</p>`;
+                console.error("Auth error:", err);
             }
         }
 
-        // 2. Real-time Listening (Shared Data - Rule 1)
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Use a shared path so all users in this appId see the same tasks
                 const tasksRef = collection(db, 'artifacts', appId, 'public', 'data', 'team_tasks');
-                
                 onSnapshot(query(tasksRef), (snapshot) => {
                     tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                     
-                    // Seed if empty (First time use)
-                    if (tasks.length === 0) {
-                        seedDefaultTasks();
-                    }
+                    if (tasks.length === 0) seedDefaultTasks();
 
                     renderFilters();
                     renderTasks();
                     updateStats();
                     
-                    // Hide loader
                     const loader = document.getElementById('loading-overlay');
                     if(loader) {
                         loader.style.opacity = '0';
-                        setTimeout(() => loader.remove(), 500);
+                        setTimeout(() => loader.remove(), 600);
                     }
-                }, (err) => {
-                    console.error("Sync error:", err);
-                });
+                }, (err) => console.error("Sync error:", err));
             }
         });
 
@@ -246,9 +244,9 @@
                 { text: "builderallworks: Fix Google tracking", category: "Technical", completed: false },
                 { text: "Email Lead Flow Automation", category: "Technical", completed: false },
                 { text: "Real VSL Production", category: "Creative", completed: false },
-                { text: "Supercharge Bundle: Website Builder AD", category: "Creative", completed: false },
+                { text: "Supercharge Bundle AD", category: "Creative", completed: false },
                 { text: "Analyze Winning AI Ads performance", category: "Strategy", completed: false },
-                { text: "Implement New Ad Structure (FB Reference)", category: "Strategy", completed: false }
+                { text: "Implement New Ad Structure", category: "Strategy", completed: false }
             ];
             const tasksRef = collection(db, 'artifacts', appId, 'public', 'data', 'team_tasks');
             for (const t of defaults) {
@@ -256,21 +254,15 @@
             }
         }
 
-        // 3. Database Actions
         window.handleAddTask = async (e) => {
             e.preventDefault();
             const input = document.getElementById('new-task-input');
             const category = document.getElementById('new-task-category').value;
             const text = input.value.trim();
             if (!text || !auth.currentUser) return;
-
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'team_tasks'), {
-                text,
-                category,
-                completed: false,
-                createdAt: serverTimestamp()
+                text, category, completed: false, createdAt: serverTimestamp()
             });
-
             input.value = '';
             toggleAddForm();
         };
@@ -278,14 +270,12 @@
         window.toggleTask = async (id) => {
             const task = tasks.find(t => t.id === id);
             if (!task || !auth.currentUser) return;
-            const taskRef = doc(db, 'artifacts', appId, 'public', 'data', 'team_tasks', id);
-            await updateDoc(taskRef, { completed: !task.completed });
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'team_tasks', id), { completed: !task.completed });
         };
 
         window.deleteTask = async (id) => {
             if (!auth.currentUser) return;
-            const taskRef = doc(db, 'artifacts', appId, 'public', 'data', 'team_tasks', id);
-            await deleteDoc(taskRef);
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'team_tasks', id));
         };
 
         window.saveEdit = async (id) => {
@@ -293,8 +283,7 @@
             if (input && auth.currentUser) {
                 const newText = input.value.trim();
                 if (newText) {
-                    const taskRef = doc(db, 'artifacts', appId, 'public', 'data', 'team_tasks', id);
-                    await updateDoc(taskRef, { text: newText });
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'team_tasks', id), { text: newText });
                 }
             }
             editingId = null;
@@ -302,9 +291,8 @@
         };
 
         window.resetSharedTasks = async () => {
-            if(confirm("This will clear the roadmap for the WHOLE TEAM. Continue?")) {
-                const tasksRef = collection(db, 'artifacts', appId, 'public', 'data', 'team_tasks');
-                const snapshot = await getDocs(tasksRef);
+            if(confirm("This will clear the database for the WHOLE TEAM. Proceed?")) {
+                const snapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'team_tasks'));
                 const batch = writeBatch(db);
                 snapshot.docs.forEach(d => batch.delete(d.ref));
                 await batch.commit();
@@ -312,7 +300,6 @@
             }
         };
 
-        // UI Logic
         window.enterEditMode = (id) => {
             editingId = id;
             renderTasks();
@@ -328,7 +315,7 @@
         function renderFilters() {
             const container = document.getElementById('filter-container');
             container.innerHTML = CATEGORIES.map(cat => `
-                <button onclick="setFilter('${cat}')" class="px-4 py-1.5 rounded-xl text-[11px] font-semibold transition-all ${currentFilter === cat ? "active-pill shadow-lg" : "text-white/40 hover:text-white"}">${cat.toUpperCase()}</button>
+                <button onclick="setFilter('${cat}')" class="px-5 py-2 rounded-xl text-[10px] font-bold tracking-widest transition-all ${currentFilter === cat ? "active-pill" : "text-white/30 hover:text-white"} uppercase">${cat}</button>
             `).join('');
         }
 
@@ -337,41 +324,36 @@
             const filtered = tasks.filter(t => currentFilter === "All" || t.category === currentFilter);
             
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-20 opacity-20 text-xs tracking-widest uppercase">No shared tasks in ${currentFilter}</div>`;
+                container.innerHTML = `<div class="text-center py-20 opacity-10 text-[10px] tracking-[0.5em] uppercase font-black">Clean Board</div>`;
                 return;
             }
 
             container.innerHTML = filtered.map(task => {
                 const isEditing = editingId === task.id;
-                const categoryStyles = {
-                    'Urgent': 'text-red-400',
-                    'Technical': 'text-purple-400',
-                    'Creative': 'text-emerald-400',
-                    'Strategy': 'text-sky-400'
-                };
-                const colorClass = categoryStyles[task.category] || 'text-white/40';
+                const colors = { 'Urgent': 'text-red-500', 'Technical': 'text-purple-400', 'Creative': 'text-emerald-400', 'Strategy': 'text-sky-400' };
+                const colorClass = colors[task.category] || 'text-white/40';
 
                 return `
-                    <div class="task-card glass flex items-center gap-4 p-5 rounded-[1.5rem] ${task.completed ? "opacity-30" : ""}">
+                    <div class="task-card glass flex items-center gap-5 p-6 rounded-[2rem] ${task.completed ? "opacity-30 saturate-0" : ""}">
                         <button onclick="toggleTask('${task.id}')" class="checkbox-custom ${task.completed ? "checkbox-checked" : ""}">
                             ${task.completed ? '<i data-lucide="check" class="w-3 h-3 text-black stroke-[4px]"></i>' : ''}
                         </button>
                         
                         <div class="flex-1 min-w-0">
-                            <span class="text-[9px] font-black uppercase tracking-[0.2em] ${colorClass}">${task.category}</span>
+                            <span class="text-[9px] font-black uppercase tracking-[0.3em] ${colorClass} block mb-1">${task.category}</span>
                             ${isEditing ? `
                                 <input id="edit-${task.id}" type="text" value="${task.text}" 
                                     onblur="saveEdit('${task.id}')" 
                                     onkeydown="if(event.key==='Enter') saveEdit('${task.id}')"
-                                    class="edit-input mt-1" />
+                                    class="edit-input" />
                             ` : `
-                                <p onclick="enterEditMode('${task.id}')" class="text-base font-medium truncate cursor-text mt-0.5 ${task.completed ? "line-through text-white/30" : "text-white/90"}">
+                                <p onclick="enterEditMode('${task.id}')" class="text-base font-medium truncate cursor-pointer transition-colors ${task.completed ? "line-through text-white/20" : "text-white/90 hover:text-white"}">
                                     ${task.text}
                                 </p>
                             `}
                         </div>
 
-                        <button onclick="deleteTask('${task.id}')" class="opacity-0 group-hover:opacity-100 p-2 text-white/20 hover:text-red-500 transition-all">
+                        <button onclick="deleteTask('${task.id}')" class="opacity-0 group-hover:opacity-100 p-2 text-white/10 hover:text-red-500/80 transition-all active:scale-75">
                             <i data-lucide="x" class="w-4 h-4"></i>
                         </button>
                     </div>
@@ -385,13 +367,14 @@
             const done = tasks.filter(t => t.completed).length;
             const progress = total > 0 ? Math.round((done / total) * 100) : 0;
             document.getElementById('progress-bar').style.width = `${progress}%`;
-            document.getElementById('progress-text').innerText = `${progress}% Team Progress`;
-            document.getElementById('task-count-text').innerText = `${done} / ${total} Shared Tasks`;
+            document.getElementById('progress-text').innerText = `${progress}% Progress`;
+            document.getElementById('task-count-text').innerText = `${done}/${total} Items`;
             document.getElementById('stat-urgent').innerText = tasks.filter(t => t.category === "Urgent" && !t.completed).length;
             document.getElementById('stat-queue').innerText = tasks.filter(t => !t.completed).length;
             document.getElementById('stat-completed').innerText = done;
         }
 
+        document.getElementById('current-date').innerText = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' }).format(new Date());
         startApp();
     </script>
 </body>
