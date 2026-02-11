@@ -54,6 +54,18 @@
 
         ::-webkit-scrollbar { width: 0px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Custom modal for Category input */
+        #category-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 200;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
     </style>
 </head>
 <body class="min-h-screen pb-20">
@@ -62,6 +74,18 @@
         <div class="w-10 h-10 border-2 border-white/10 border-t-white rounded-full animate-spin mb-6"></div>
         <p id="loader-text" class="text-[10px] font-bold tracking-[0.4em] text-white/30 uppercase">Syncing Workspace</p>
         <button id="skip-btn" onclick="hideLoader()" class="hidden mt-8 text-[10px] text-white/20 uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 transition-all">Skip and Enter</button>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div id="category-modal" class="p-6">
+        <div class="glass max-w-sm w-full p-8 rounded-[2.5rem] shadow-2xl animate-in fade-in zoom-in duration-300">
+            <h3 class="text-white text-xl font-medium mb-4">New Category</h3>
+            <input id="new-category-input" type="text" placeholder="Category name..." class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white outline-none focus:border-white/30 mb-6" />
+            <div class="flex gap-3">
+                <button onclick="handleAddCategory()" class="flex-1 bg-white text-black py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-zinc-200">Create</button>
+                <button onclick="toggleCategoryModal(false)" class="flex-1 bg-white/5 text-white py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-white/10">Cancel</button>
+            </div>
+        </div>
     </div>
 
     <div class="max-w-3xl mx-auto px-6 pt-16">
@@ -89,8 +113,14 @@
             <div class="bg-white/5 h-[4px] rounded-full overflow-hidden"><div id="progress-bar" class="bg-white h-full transition-all duration-1000 ease-out" style="width: 0%"></div></div>
         </div>
 
-        <div class="flex items-center justify-between mb-8">
-            <div id="filter-container" class="flex bg-white/5 p-1 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar"></div>
+        <!-- Filters & Manage Categories -->
+        <div class="flex items-center justify-between gap-4 mb-8">
+            <div class="flex items-center gap-2 overflow-hidden">
+                <div id="filter-container" class="flex bg-white/5 p-1 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar"></div>
+                <button onclick="toggleCategoryModal(true)" class="p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-white/40 hover:text-sky-400 transition-colors shrink-0 shadow-sm" title="Add Category">
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                </button>
+            </div>
             <button onclick="toggleAddForm()" class="w-12 h-12 flex items-center justify-center rounded-full bg-white text-black hover:scale-110 active:scale-90 shadow-2xl shrink-0"><i data-lucide="plus" class="w-6 h-6"></i></button>
         </div>
 
@@ -100,13 +130,7 @@
                 <div class="flex flex-wrap gap-4 justify-between items-center">
                     <div class="flex gap-2 items-center bg-white/5 px-4 py-2 rounded-2xl border border-white/5">
                         <span class="text-[10px] uppercase font-bold text-white/30">Category:</span>
-                        <select id="new-task-category" class="bg-transparent text-xs text-white outline-none border-none p-0 pr-6">
-                            <option value="Urgent">Urgent</option>
-                            <option value="Technical" selected>Technical</option>
-                            <option value="Creative">Creative</option>
-                            <option value="Strategy">Strategy</option>
-                            <option value="Recurrent">Recurrent</option>
-                        </select>
+                        <select id="new-task-category" class="bg-transparent text-xs text-white outline-none border-none p-0 pr-6"></select>
                     </div>
                     <button type="submit" class="bg-white text-black px-10 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-zinc-200 transition-all">Publish</button>
                 </div>
@@ -136,46 +160,54 @@
         
         const appId = 'zifou-marketing-team-2026';
         let tasks = [];
+        let categories = [];
         let currentFilter = "All";
         let editingId = null;
         let isCloud = false;
-        const CAT_LIST = ["All", "Urgent", "Technical", "Creative", "Strategy", "Recurrent"];
-
-        const timer = setTimeout(() => {
-            document.getElementById('loader-text').innerText = "Sync slow. Check Rules.";
-            document.getElementById('skip-btn').classList.remove('hidden');
-        }, 5000);
-
-        window.hideLoader = () => {
-            clearTimeout(timer);
-            const overlay = document.getElementById('loading-overlay');
-            if (overlay) { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 600); }
-        };
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        // INITIALIZATION
         async function initApp() {
             try {
                 await signInAnonymously(auth);
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         isCloud = true;
+                        
+                        // 1. Sync Categories
+                        const catsRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_categories');
+                        onSnapshot(query(catsRef), (snapshot) => {
+                            categories = snapshot.docs.map(d => d.data().name).sort();
+                            if (categories.length === 0) seedInitialCategories();
+                            refreshUI();
+                        });
+
+                        // 2. Sync Tasks
                         const tasksRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks');
                         onSnapshot(query(tasksRef), (snapshot) => {
                             const rawTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                             tasks = rawTasks.sort((a, b) => (a.position || 0) - (b.position || 0));
                             
-                            if (tasks.length === 0) seedInitialTasks();
+                            if (tasks.length === 0 && categories.length > 0) seedInitialTasks();
+                            
                             document.getElementById('sync-indicator').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_12px_rgba(52,199,89,0.4)]";
                             document.getElementById('sync-label').innerText = "Cloud Sync";
                             refreshUI();
                             hideLoader();
-                        }, (err) => { console.error(err); initLocal(); });
+                        }, (err) => { console.error(err); hideLoader(); });
                     }
                 });
-            } catch (e) { initLocal(); }
+            } catch (e) { console.error(e); hideLoader(); }
+        }
+
+        async function seedInitialCategories() {
+            const defaults = ["Urgent", "Technical", "Creative", "Strategy", "Recurrent"];
+            for (const name of defaults) {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_categories'), { name });
+            }
         }
 
         async function seedInitialTasks() {
@@ -183,7 +215,6 @@
                 { text: "Enable WhatsApp in Meta", category: "Urgent", completed: false },
                 { text: "builderallworks: Fix Google tracking", category: "Technical", completed: false },
                 { text: "Real VSL Production", category: "Creative", completed: false },
-                { text: "Implement New Ad Structure", category: "Strategy", completed: false },
                 { text: "Check Daily Ad Spend", category: "Recurrent", completed: false }
             ];
             for (let i = 0; i < originalTasks.length; i++) {
@@ -195,16 +226,31 @@
             }
         }
 
-        function initLocal() {
-            isCloud = false;
-            const saved = localStorage.getItem('local_roadmap_data');
-            tasks = saved ? JSON.parse(saved) : [{ id: "1", text: "Offline Mode. Changes stay local.", category: "Recurrent", completed: false }];
-            document.getElementById('sync-indicator').className = "w-2 h-2 rounded-full bg-blue-500";
-            document.getElementById('sync-label').innerText = "Local Safe";
-            refreshUI();
-            setTimeout(hideLoader, 500);
-        }
+        // CATEGORY HANDLERS
+        window.toggleCategoryModal = (show) => {
+            document.getElementById('category-modal').style.display = show ? 'flex' : 'none';
+            if (show) document.getElementById('new-category-input').focus();
+        };
 
+        window.handleAddCategory = async () => {
+            const input = document.getElementById('new-category-input');
+            const name = input.value.trim();
+            if (!name) return;
+            
+            // Format name: Title Case
+            const formattedName = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+            
+            if (categories.includes(formattedName)) {
+                alert("Category already exists");
+                return;
+            }
+
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_categories'), { name: formattedName });
+            input.value = '';
+            toggleCategoryModal(false);
+        };
+
+        // TASK HANDLERS
         window.handleAddTask = async (e) => {
             e.preventDefault();
             const input = document.getElementById('new-task-input');
@@ -213,38 +259,20 @@
             if (!text) return;
             const maxPos = tasks.length > 0 ? Math.max(...tasks.map(t => t.position || 0)) : 0;
 
-            if (isCloud) {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'), {
-                    text, category, completed: false, position: maxPos + 1, createdAt: serverTimestamp()
-                });
-            } else {
-                tasks.unshift({ id: String(Date.now()), text, category, completed: false, position: 0 });
-                localStorage.setItem('local_roadmap_data', JSON.stringify(tasks));
-                refreshUI();
-            }
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'), {
+                text, category, completed: false, position: maxPos + 1, createdAt: serverTimestamp()
+            });
             input.value = '';
             toggleAddForm();
         };
 
         window.toggleTask = async (id) => {
             const t = tasks.find(x => x.id === id);
-            if (isCloud) {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', id), { completed: !t.completed });
-            } else {
-                tasks = tasks.map(t => String(t.id) === String(id) ? { ...t, completed: !t.completed } : t);
-                localStorage.setItem('local_roadmap_data', JSON.stringify(tasks));
-                refreshUI();
-            }
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', id), { completed: !t.completed });
         };
 
         window.deleteTask = async (id) => {
-            if (isCloud) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', String(id)));
-            } else {
-                tasks = tasks.filter(t => String(t.id) !== String(id));
-                localStorage.setItem('local_roadmap_data', JSON.stringify(tasks));
-                refreshUI();
-            }
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', String(id)));
         };
 
         window.saveEdit = async (id) => {
@@ -252,34 +280,21 @@
             const catSelect = document.getElementById(`edit-cat-${id}`);
             if (!input || !input.value.trim() || !catSelect) return;
             
-            const newText = input.value.trim();
-            const newCat = catSelect.value;
-
-            if (isCloud) {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', id), { 
-                    text: newText,
-                    category: newCat 
-                });
-            } else {
-                tasks = tasks.map(t => String(t.id) === String(id) ? { ...t, text: newText, category: newCat } : t);
-                localStorage.setItem('local_roadmap_data', JSON.stringify(tasks));
-            }
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', id), { 
+                text: input.value.trim(),
+                category: catSelect.value 
+            });
             editingId = null;
             refreshUI();
         };
 
         window.clearAllData = async () => {
-            if(!confirm("Clear whole board?")) return;
-            if (isCloud) {
-                const snapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'));
-                const batch = writeBatch(db);
-                snapshot.docs.forEach(d => batch.delete(d.ref));
-                await batch.commit();
-                seedInitialTasks();
-            } else {
-                localStorage.removeItem('local_roadmap_data');
-                initLocal();
-            }
+            if(!confirm("Wipe dashboard tasks? (Categories stay)")) return;
+            const snapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'));
+            const batch = writeBatch(db);
+            snapshot.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            seedInitialTasks();
         };
 
         // DRAG AND DROP
@@ -301,26 +316,40 @@
             tasks = newTasks.map((t, idx) => ({ ...t, position: idx }));
             refreshUI();
 
-            if (isCloud) {
-                const batch = writeBatch(db);
-                tasks.forEach((t, idx) => {
-                    batch.update(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', t.id), { position: idx });
-                });
-                await batch.commit();
-            } else {
-                localStorage.setItem('local_roadmap_data', JSON.stringify(tasks));
-            }
+            const batch = writeBatch(db);
+            tasks.forEach((t, idx) => {
+                batch.update(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', t.id), { position: idx });
+            });
+            await batch.commit();
         };
 
+        // UI HELPERS
         window.enterEditMode = (id) => { editingId = id; refreshUI(); setTimeout(() => { const i = document.getElementById(`edit-${id}`); i?.focus(); i?.select(); }, 50); };
         window.setFilter = (cat) => { currentFilter = cat; refreshUI(); };
         window.toggleAddForm = () => document.getElementById('add-task-form').classList.toggle('hidden');
+        window.hideLoader = () => { const overlay = document.getElementById('loading-overlay'); if (overlay) { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 600); } };
 
         function refreshUI() {
             const container = document.getElementById('task-list');
             const fTasks = tasks.filter(t => currentFilter === "All" || t.category === currentFilter);
             const filterContainer = document.getElementById('filter-container');
-            filterContainer.innerHTML = CAT_LIST.map(cat => `<button onclick="setFilter('${cat}')" class="px-5 py-2 rounded-xl text-[10px] font-bold tracking-widest transition-all ${currentFilter === cat ? "active-pill" : "text-white/30 hover:text-white"} uppercase shrink-0">${cat}</button>`).join('');
+            const addTaskSelect = document.getElementById('new-task-category');
+            
+            // Build Dynamic Category List for Dropdowns
+            const CAT_LIST_ALL = ["All", ...categories];
+            const CAT_LIST_NO_ALL = [...categories];
+
+            // Render Filters
+            filterContainer.innerHTML = CAT_LIST_ALL.map(cat => `
+                <button onclick="setFilter('${cat}')" class="px-5 py-2 rounded-xl text-[10px] font-bold tracking-widest transition-all ${currentFilter === cat ? "active-pill" : "text-white/30 hover:text-white"} uppercase shrink-0">
+                    ${cat}
+                </button>
+            `).join('');
+
+            // Render Add Task Select
+            if (addTaskSelect) {
+                addTaskSelect.innerHTML = CAT_LIST_NO_ALL.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+            }
 
             if (fTasks.length === 0) {
                 container.innerHTML = `<div class="text-center py-20 opacity-10 text-[10px] tracking-[0.5em] uppercase font-black">Clean Board</div>`;
@@ -328,6 +357,8 @@
                 container.innerHTML = fTasks.map(task => {
                     const colors = { 'Urgent': 'text-red-500', 'Technical': 'text-purple-400', 'Creative': 'text-emerald-400', 'Strategy': 'text-sky-400', 'Recurrent': 'text-pink-400' };
                     const isEditing = editingId === task.id;
+                    const catColor = colors[task.category] || 'text-indigo-400';
+
                     return `
                         <div class="task-card glass flex items-center gap-5 p-6 rounded-[2rem] ${task.completed ? "opacity-30 saturate-0" : ""}" 
                              draggable="true" ondragstart="handleDragStart(event)" ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragend="handleDragEnd(event)"
@@ -339,7 +370,7 @@
                                 ${isEditing ? `
                                     <div class="flex flex-col gap-2 w-full">
                                         <select id="edit-cat-${task.id}" class="edit-select">
-                                            ${CAT_LIST.filter(c => c !== "All").map(c => `<option value="${c}" ${c === task.category ? 'selected' : ''}>${c}</option>`).join('')}
+                                            ${CAT_LIST_NO_ALL.map(c => `<option value="${c}" ${c === task.category ? 'selected' : ''}>${c}</option>`).join('')}
                                         </select>
                                         <input id="edit-${task.id}" type="text" value="${task.text}" onkeydown="if(event.key==='Enter') saveEdit('${task.id}')" class="edit-input" />
                                         <div class="flex gap-2">
@@ -348,7 +379,7 @@
                                         </div>
                                     </div>
                                 ` : `
-                                    <span class="text-[9px] font-black uppercase tracking-[0.3em] ${colors[task.category] || 'text-white/40'} block mb-1">${task.category}</span>
+                                    <span class="text-[9px] font-black uppercase tracking-[0.3em] ${catColor} block mb-1">${task.category}</span>
                                     <p onclick="enterEditMode('${task.id}')" class="text-base font-medium truncate cursor-pointer transition-colors hover:text-white">${task.text}</p>
                                 `}
                             </div>
@@ -363,8 +394,8 @@
             const progress = total > 0 ? Math.round((done/total)*100) : 0;
             const pBar = document.getElementById('progress-bar');
             if (pBar) pBar.style.width = `${progress}%`;
-            document.getElementById('progress-text').innerText = `${progress}% Progress`;
-            document.getElementById('task-count-text').innerText = `${done}/${total} Items`;
+            document.getElementById('progress-text').innerText = `${progress}% Team Progress`;
+            document.getElementById('task-count-text').innerText = `${done}/${total} Shared Items`;
             document.getElementById('stat-urgent').innerText = tasks.filter(t => t.category === "Urgent" && !t.completed).length;
             document.getElementById('stat-queue').innerText = tasks.filter(t => !t.completed).length;
             document.getElementById('stat-completed').innerText = done;
