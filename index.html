@@ -112,6 +112,7 @@
 </head>
 <body class="min-h-screen pb-20">
 
+    <!-- Loading Screen -->
     <div id="loading-overlay">
         <div class="w-10 h-10 border-2 border-white/10 border-t-white rounded-full animate-spin mb-6"></div>
         <p id="loader-text" class="text-[10px] font-bold tracking-[0.4em] text-white/30 uppercase">Establishing Connection</p>
@@ -121,6 +122,7 @@
     </div>
 
     <div class="max-w-3xl mx-auto px-6 pt-16">
+        <!-- Header -->
         <header class="mb-14 text-center">
             <div class="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 shadow-sm">
                 <i data-lucide="zap" class="w-3.5 h-3.5 text-sky-400"></i>
@@ -132,6 +134,7 @@
             <p id="current-date" class="text-sm text-white/20 font-medium tracking-wide lowercase"></p>
         </header>
 
+        <!-- Stats Row -->
         <div class="grid grid-cols-4 gap-4 mb-12">
             <div class="glass p-5 rounded-[2rem] text-center">
                 <p class="text-[9px] uppercase tracking-widest text-white/30 mb-1">Urgent</p>
@@ -151,6 +154,7 @@
             </div>
         </div>
 
+        <!-- Team Progress -->
         <div class="mb-12 px-2">
             <div class="flex justify-between items-end mb-3">
                 <span id="progress-text" class="text-[10px] font-black text-white/40 uppercase tracking-widest">0% Combined Progress</span>
@@ -161,6 +165,7 @@
             </div>
         </div>
 
+        <!-- Controls -->
         <div class="flex items-center justify-between mb-8">
             <div id="filter-container" class="flex bg-white/5 p-1 rounded-2xl border border-white/5"></div>
             <button onclick="toggleAddForm()" class="w-12 h-12 flex items-center justify-center rounded-full bg-white text-black hover:scale-110 transition-all active:scale-90 shadow-2xl shadow-white/20">
@@ -168,6 +173,7 @@
             </button>
         </div>
 
+        <!-- New Task Form -->
         <div id="add-task-form" class="hidden mb-10 glass p-8 rounded-[2.5rem] animate-in fade-in slide-in-from-top-4 duration-500 shadow-2xl">
             <form onsubmit="handleAddTask(event)" class="space-y-6">
                 <input id="new-task-input" type="text" placeholder="What needs to be done?" class="w-full bg-transparent text-2xl font-light outline-none border-b border-white/10 pb-4 focus:border-white/40 transition-colors placeholder:text-white/10" />
@@ -186,6 +192,7 @@
             </form>
         </div>
 
+        <!-- Task Feed -->
         <div id="task-list" class="space-y-4"></div>
 
         <div class="mt-20 pt-10 border-t border-white/5 text-center opacity-20 hover:opacity-100 transition-opacity">
@@ -195,22 +202,25 @@
         </div>
     </div>
 
+    <!-- FIREBASE & LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, query, serverTimestamp, getDocs, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- PASTE YOUR FIREBASE CONFIG HERE ---
-        // Replace 'null' with your actual firebaseConfig object from the Firebase console.
+        // ==========================================
+        // INTEGRATED FIREBASE CONFIGURATION
+        // ==========================================
         const firebaseConfig = {
-  apiKey: "AIzaSyAO5BjN8LHwaRfmsmCmkuTCtbBjdhj80_8",
-  authDomain: "marketing-dashboard-77465.firebaseapp.com",
-  projectId: "marketing-dashboard-77465",
-  storageBucket: "marketing-dashboard-77465.firebasestorage.app",
-  messagingSenderId: "740462399798",
-  appId: "1:740462399798:web:50ba6177743f35ae39e397",
-  measurementId: "G-TGVW8K1HXP"
-};
+            apiKey: "AIzaSyAO5BjN8LHwaRfmsmCmkuTCtbBjdhj80_8",
+            authDomain: "marketing-dashboard-77465.firebaseapp.com",
+            projectId: "marketing-dashboard-77465",
+            storageBucket: "marketing-dashboard-77465.firebasestorage.app",
+            messagingSenderId: "740462399798",
+            appId: "1:740462399798:web:50ba6177743f35ae39e397",
+            measurementId: "G-TGVW8K1HXP"
+        };
+        // ==========================================
         
         const appId = 'zifou-marketing-team-2026';
         let tasks = [];
@@ -222,7 +232,7 @@
         const timeoutId = setTimeout(() => {
             document.getElementById('loader-text').innerText = "Connection Slow...";
             document.getElementById('skip-loading').classList.remove('hidden');
-        }, 5000);
+        }, 8000);
 
         window.hideLoader = () => {
             clearTimeout(timeoutId);
@@ -235,30 +245,22 @@
 
         let db, auth;
         try {
-            // Check if user provided their own config, otherwise look for environment config
-            const config = myCustomConfig || (typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null);
-            
-            if (config && config.apiKey) {
-                const app = initializeApp(config);
+            if (firebaseConfig && firebaseConfig.apiKey) {
+                const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
                 isCloud = true;
                 initCloud();
             } else {
-                throw new Error("No config found");
+                initLocal();
             }
         } catch (e) {
-            console.log("Running in Local Mode");
             initLocal();
         }
 
         async function initCloud() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                await signInAnonymously(auth);
 
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
@@ -266,17 +268,38 @@
                         onSnapshot(query(tasksRef), (snapshot) => {
                             tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                             
+                            // Seed if board is empty
+                            if (tasks.length === 0) seedInitialTasks();
+
                             document.getElementById('sync-indicator').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_12px_rgba(52,199,89,0.4)]";
                             document.getElementById('sync-label').innerText = "Cloud Sync";
-                            
                             refreshUI();
                             hideLoader();
                         });
                     }
                 });
             } catch(e) {
-                console.error("Cloud init failed", e);
                 initLocal();
+            }
+        }
+
+        async function seedInitialTasks() {
+            const originalTasks = [
+                { text: "Enable WhatsApp in Meta", category: "Urgent", completed: false },
+                { text: "Pierre: Reactivate WhatsApp Groups", category: "Urgent", completed: false },
+                { text: "builderallworks: Fix Google tracking", category: "Technical", completed: false },
+                { text: "emailmarketingmastery: Fix Google tracking", category: "Technical", completed: false },
+                { text: "Optimize Google Ads (Intent Signals)", category: "Technical", completed: false },
+                { text: "Email Lead Flow Automation", category: "Technical", completed: false },
+                { text: "Real VSL Production", category: "Creative", completed: false },
+                { text: "Supercharge Bundle AD", category: "Creative", completed: false },
+                { text: "Analyze Winning AI Ads performance", category: "Strategy", completed: false },
+                { text: "Implement New Ad Structure", category: "Strategy", completed: false }
+            ];
+            for (const t of originalTasks) {
+                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'), {
+                    ...t, createdAt: serverTimestamp()
+                });
             }
         }
 
@@ -284,18 +307,15 @@
             isCloud = false;
             const saved = localStorage.getItem('local_roadmap_data');
             tasks = saved ? JSON.parse(saved) : [
-                { id: 1, text: "Welcome! (Local Mode)", category: "Strategy", completed: false },
-                { id: 2, text: "Paste your Firebase key in the code to sync between computers.", category: "Technical", completed: false }
+                { id: 1, text: "Cloud connection failed. Using local storage.", category: "Strategy", completed: false }
             ];
-            
             document.getElementById('sync-indicator').className = "w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_12px_rgba(59,130,246,0.4)]";
             document.getElementById('sync-label').innerText = "Local Safe";
-            
             refreshUI();
             setTimeout(hideLoader, 500);
         }
 
-        function persist() {
+        function persistLocal() {
             if (isCloud) return;
             localStorage.setItem('local_roadmap_data', JSON.stringify(tasks));
         }
@@ -313,7 +333,7 @@
                 });
             } else {
                 tasks.unshift({ id: Date.now(), text, category, completed: false });
-                persist();
+                persistLocal();
                 refreshUI();
             }
             input.value = '';
@@ -326,7 +346,7 @@
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', id), { completed: !task.completed });
             } else {
                 tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
-                persist();
+                persistLocal();
                 refreshUI();
             }
         };
@@ -336,7 +356,7 @@
                 await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', id));
             } else {
                 tasks = tasks.filter(t => t.id !== id);
-                persist();
+                persistLocal();
                 refreshUI();
             }
         };
@@ -351,19 +371,20 @@
                 await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', id), { text: newText });
             } else {
                 tasks = tasks.map(t => t.id === id ? { ...t, text: newText } : t);
-                persist();
+                persistLocal();
             }
             editingId = null;
             refreshUI();
         };
 
         window.clearAllData = async () => {
-            if(!confirm("Factory reset all data? This cannot be undone.")) return;
+            if(!confirm("Factory reset all data? This will wipe the board for EVERYONE.")) return;
             if (isCloud) {
                 const snapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'));
                 const batch = writeBatch(db);
                 snapshot.docs.forEach(d => batch.delete(d.ref));
                 await batch.commit();
+                seedInitialTasks();
             } else {
                 localStorage.removeItem('local_roadmap_data');
                 initLocal();
