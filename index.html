@@ -3,170 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Marketing Ops Center 2026</title>
+    <title>Marketing Ops Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
+        :root {
+            --apple-bg: #000000;
+            --apple-card: rgba(28, 28, 30, 0.7);
+            --apple-border: rgba(255, 255, 255, 0.1);
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #020617;
-            scrollbar-width: none;
-        }
-        ::-webkit-scrollbar { display: none; }
-        
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        .progress-glow {
-            position: absolute;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.2);
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--apple-bg);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: #ffffff;
+            -webkit-font-smoothing: antialiased;
         }
 
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        .glass {
+            background: var(--apple-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--apple-border);
+        }
 
         .task-card {
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        
-        .save-indicator {
-            transition: opacity 0.5s ease;
+
+        .task-card:hover {
+            background: rgba(44, 44, 46, 0.8);
+            transform: translateY(-1px);
         }
+
+        .checkbox-custom {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-checked {
+            background: #34c759;
+            border-color: #34c759;
+        }
+
+        .edit-input {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 2px 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            width: 100%;
+            outline: none;
+        }
+
+        .filter-btn {
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .active-pill {
+            background: white;
+            color: black !important;
+        }
+
+        /* Apple-style Progress Bar */
+        #progress-bar {
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.3);
+        }
+
+        ::-webkit-scrollbar { width: 0px; }
     </style>
 </head>
-<body class="text-slate-200">
+<body class="min-h-screen pb-20">
 
-    <div class="max-w-4xl mx-auto px-4 py-8 md:py-12">
+    <div class="max-w-3xl mx-auto px-6 pt-16">
         <!-- Header -->
-        <header class="mb-12 space-y-4">
-            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <div class="flex items-center gap-2 text-sky-400 mb-2">
-                        <i data-lucide="zap" class="w-6 h-6 fill-sky-400"></i>
-                        <span class="font-bold tracking-widest text-sm uppercase text-sky-400">Ops Center 2026</span>
-                    </div>
-                    <h1 class="text-4xl md:text-5xl font-black tracking-tight text-white italic">
-                        MARKETING <span class="text-sky-500">ROADMAP</span>
-                    </h1>
-                </div>
-                <div class="text-right">
-                    <p class="text-slate-400 text-sm font-medium flex items-center gap-2 justify-end">
-                        <i data-lucide="calendar" class="w-4 h-4"></i>
-                        Feb 11, 2026
-                    </p>
-                </div>
+        <header class="mb-12 text-center">
+            <div class="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-white/5 border border-white/10">
+                <i data-lucide="shield-check" class="w-4 h-4 text-sky-400"></i>
+                <span class="text-[10px] font-bold tracking-[0.2em] uppercase text-white/60">Core Dashboard 2026</span>
             </div>
-
-            <div class="bg-slate-900 h-4 rounded-full overflow-hidden border border-slate-800 p-0.5">
-                <div id="progress-bar" class="bg-gradient-to-r from-sky-600 to-blue-400 h-full rounded-full transition-all duration-1000 ease-out relative" style="width: 0%">
-                    <div class="progress-glow"></div>
-                </div>
-            </div>
-            <div class="flex justify-between text-xs font-bold text-slate-500 uppercase tracking-tighter">
-                <span id="progress-text">Progress: 0%</span>
-                <span id="task-count-text">0 / 0 Tasks Complete</span>
-            </div>
+            <h1 class="text-5xl font-semibold tracking-tight mb-4 bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent italic">
+                Marketing Roadmap
+            </h1>
+            <p class="text-sm text-white/40 font-medium tracking-wide">Wednesday, Feb 11, 2026</p>
         </header>
 
-        <!-- Filters & Actions -->
-        <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
-            <div id="filter-container" class="flex bg-slate-900 p-1 rounded-xl border border-slate-800 overflow-x-auto no-scrollbar"></div>
-            <button onclick="toggleAddForm()" class="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl transition-all border border-slate-700 text-sm font-bold">
-                <i data-lucide="plus" class="w-4 h-4"></i>
-                NEW TASK
+        <!-- Stats Grid (Compact Apple Style) -->
+        <div class="grid grid-cols-4 gap-3 mb-10">
+            <div class="glass p-4 rounded-3xl text-center">
+                <p class="text-[10px] uppercase tracking-wider text-white/40 mb-1">Urgent</p>
+                <p id="stat-urgent" class="text-2xl font-semibold text-red-500">0</p>
+            </div>
+            <div class="glass p-4 rounded-3xl text-center">
+                <p class="text-[10px] uppercase tracking-wider text-white/40 mb-1">Queue</p>
+                <p id="stat-queue" class="text-2xl font-semibold">0</p>
+            </div>
+            <div class="glass p-4 rounded-3xl text-center">
+                <p class="text-[10px] uppercase tracking-wider text-white/40 mb-1">Done</p>
+                <p id="stat-completed" class="text-2xl font-semibold text-emerald-400">0</p>
+            </div>
+            <div class="glass p-4 rounded-3xl text-center">
+                <p class="text-[10px] uppercase tracking-wider text-white/40 mb-1">Status</p>
+                <p class="text-[10px] font-bold text-sky-400 mt-2">ONLINE</p>
+            </div>
+        </div>
+
+        <!-- Progress Section -->
+        <div class="mb-10 px-2">
+            <div class="flex justify-between items-end mb-2">
+                <span id="progress-text" class="text-xs font-semibold text-white/60 uppercase tracking-widest">0% Complete</span>
+                <span id="task-count-text" class="text-[10px] font-medium text-white/30 uppercase tracking-widest">0 / 0 Tasks</span>
+            </div>
+            <div class="bg-white/5 h-[6px] rounded-full overflow-hidden border border-white/5">
+                <div id="progress-bar" class="bg-white h-full transition-all duration-700 ease-out" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="flex items-center justify-between mb-6">
+            <div id="filter-container" class="flex bg-white/5 p-1 rounded-2xl border border-white/5"></div>
+            <button onclick="toggleAddForm()" class="w-10 h-10 flex items-center justify-center rounded-full bg-white text-black hover:scale-105 transition-transform active:scale-95">
+                <i data-lucide="plus" class="w-5 h-5"></i>
             </button>
         </div>
 
-        <div id="add-task-form" class="hidden mb-8 animate-in slide-in-from-top-2 duration-300">
-            <form onsubmit="handleAddTask(event)" class="flex gap-2">
-                <input id="new-task-input" type="text" placeholder="What needs to be done?" class="flex-1 bg-slate-900 border border-sky-500/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-sky-500/50" />
-                <button type="submit" class="bg-sky-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-sky-400 transition-colors text-sm">ADD</button>
+        <!-- Add Form -->
+        <div id="add-task-form" class="hidden mb-8 glass p-6 rounded-[2rem] animate-in fade-in zoom-in duration-300">
+            <form onsubmit="handleAddTask(event)" class="space-y-4">
+                <input id="new-task-input" type="text" placeholder="Task description..." class="w-full bg-transparent text-xl font-medium outline-none border-b border-white/10 pb-2 focus:border-white/40 transition-colors" />
+                <div class="flex justify-between items-center">
+                    <select id="new-task-category" class="bg-white/10 border-none rounded-xl px-4 py-2 text-xs text-white outline-none">
+                        <option value="Urgent">Urgent</option>
+                        <option value="Technical">Technical</option>
+                        <option value="Creative">Creative</option>
+                        <option value="Strategy">Strategy</option>
+                    </select>
+                    <button type="submit" class="bg-white text-black px-6 py-2 rounded-full text-xs font-bold hover:bg-zinc-200 transition-colors">Create Task</button>
+                </div>
             </form>
         </div>
 
-        <div id="task-list" class="grid gap-4"></div>
+        <!-- Task List -->
+        <div id="task-list" class="space-y-3"></div>
 
-        <!-- Footer Stats -->
-        <footer class="mt-16 pt-8 border-t border-slate-900 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
-                <p class="text-slate-500 text-xs font-bold uppercase mb-1 tracking-widest text-[10px]">Urgent</p>
-                <p id="stat-urgent" class="text-2xl font-black text-white">0</p>
-            </div>
-            <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
-                <p class="text-slate-500 text-xs font-bold uppercase mb-1 tracking-widest text-[10px]">Queue</p>
-                <p id="stat-queue" class="text-2xl font-black text-white">0</p>
-            </div>
-            <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-800">
-                <p class="text-slate-500 text-xs font-bold uppercase mb-1 tracking-widest text-[10px]">Done</p>
-                <p id="stat-completed" class="text-2xl font-black text-sky-500">0</p>
-            </div>
-            <div class="bg-slate-900/50 p-4 rounded-2xl border border-slate-800 flex flex-col justify-between">
-                <p class="text-slate-500 text-xs font-bold uppercase mb-1 tracking-widest text-[10px]">Storage</p>
-                <div id="save-status" class="text-[10px] text-emerald-500 uppercase font-black flex items-center gap-1">
-                    <i data-lucide="hard-drive" class="w-3 h-3"></i> <span>Ready</span>
-                </div>
-            </div>
-        </footer>
-        
-        <div class="mt-8 text-center">
-             <button onclick="resetToDefaults()" class="text-[10px] text-slate-600 hover:text-red-400 uppercase tracking-widest font-bold transition-colors">
-                Reset to Default Tasks
-             </button>
+        <div class="mt-12 text-center">
+            <button onclick="resetToDefaults()" class="text-[10px] text-white/20 hover:text-red-400 uppercase tracking-[0.3em] font-bold transition-colors">
+                Factory Reset Dashboard
+            </button>
         </div>
     </div>
 
     <script>
-        const STORAGE_KEY = 'marketing_ops_v2_2026';
+        const STORAGE_KEY = 'marketing_ops_pro_2026_apple';
         const CATEGORIES = ["All", "Urgent", "Technical", "Creative", "Strategy"];
         let tasks = [];
         let currentFilter = "All";
+        let editingId = null;
 
         const DEFAULT_TASKS = [
-            { id: 1, text: "Enable WhatsApp in Meta", category: "Urgent", completed: false, priority: "high" },
-            { id: 2, text: "Pierre: Reactivate WhatsApp Groups", category: "Urgent", completed: false, priority: "high" },
-            { id: 3, text: "builderallworks: Fix Google tracking", category: "Technical", completed: false, priority: "medium" },
-            { id: 4, text: "emailmarketingmastery: Fix Google tracking", category: "Technical", completed: false, priority: "medium" },
-            { id: 5, text: "Optimize Google Ads (Intent Signals)", category: "Technical", completed: false, priority: "medium" },
-            { id: 8, text: "Finalize Real VSL", category: "Creative", completed: false, priority: "medium" },
-            { id: 10, text: "Supercharge Bundle: Add specific paragraph", category: "Creative", completed: false, priority: "high" },
-            { id: 14, text: "Analyze Winning AI Ads performance", category: "Strategy", completed: false, priority: "medium" }
+            { id: 1, text: "Enable WhatsApp in Meta", category: "Urgent", completed: false },
+            { id: 2, text: "Pierre: Reactivate WhatsApp Groups", category: "Urgent", completed: false },
+            { id: 3, text: "builderallworks: Fix Google tracking", category: "Technical", completed: false },
+            { id: 4, text: "emailmarketingmastery: Fix Google tracking", category: "Technical", completed: false },
+            { id: 5, text: "Optimize Google Ads (Intent Signals)", category: "Technical", completed: false },
+            { id: 6, text: "Email Lead Flow Automation", category: "Technical", completed: false },
+            { id: 7, text: "Real VSL Production", category: "Creative", completed: false },
+            { id: 8, text: "Social Proof: Add 'X websites generated' stats", category: "Creative", completed: false },
+            { id: 9, text: "Supercharge Bundle: Add specific paragraph", category: "Creative", completed: false },
+            { id: 10, text: "Supercharge Bundle: Website Builder AD", category: "Creative", completed: false },
+            { id: 11, text: "Test AI Video (IG Reference)", category: "Creative", completed: false },
+            { id: 12, text: "Word Replace in Ads (Bulk Update)", category: "Strategy", completed: false },
+            { id: 13, text: "7 Dollar Sales Tripwire Review", category: "Strategy", completed: false },
+            { id: 14, text: "Analyze Winning AI Ads performance", category: "Strategy", completed: false },
+            { id: 15, text: "Template Expansion: New Landing Pages", category: "Strategy", completed: false },
+            { id: 16, text: "Implement New Ad Structure (FB Reference)", category: "Strategy", completed: false }
         ];
 
-        // Core persistence logic
         function loadTasks() {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
-                try {
-                    tasks = JSON.parse(saved);
-                } catch (e) {
-                    console.error("Corrupted storage, loading defaults");
-                    tasks = [...DEFAULT_TASKS];
-                }
-            } else {
-                tasks = [...DEFAULT_TASKS];
-            }
+                try { tasks = JSON.parse(saved); } catch (e) { tasks = [...DEFAULT_TASKS]; }
+            } else { tasks = [...DEFAULT_TASKS]; }
         }
 
         function saveTasks() {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-            showSaveIndicator();
-        }
-
-        function showSaveIndicator() {
-            const status = document.getElementById('save-status');
-            status.innerHTML = `<i data-lucide="refresh-cw" class="w-3 h-3 animate-spin"></i> Saving...`;
-            lucide.createIcons();
-            setTimeout(() => {
-                status.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-400"></i> Saved to Browser`;
-                lucide.createIcons();
-            }, 800);
         }
 
         function resetToDefaults() {
-            if(confirm("This will delete all your custom tasks and reset to the original list. Continue?")) {
+            if(confirm("This will erase all custom tasks. Reset?")) {
                 tasks = [...DEFAULT_TASKS];
                 saveTasks();
                 renderTasks();
@@ -174,33 +212,14 @@
             }
         }
 
-        // UI Interaction
-        function renderFilters() {
-            const container = document.getElementById('filter-container');
-            container.innerHTML = CATEGORIES.map(cat => `
-                <button onclick="setFilter('${cat}')" class="px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${currentFilter === cat ? "bg-sky-500 text-white" : "text-slate-400 hover:text-slate-200"}">${cat.toUpperCase()}</button>
-            `).join('');
-        }
-
-        function setFilter(cat) {
-            currentFilter = cat;
-            renderFilters();
-            renderTasks();
-        }
-
-        function toggleAddForm() {
-            const form = document.getElementById('add-task-form');
-            form.classList.toggle('hidden');
-            if (!form.classList.contains('hidden')) document.getElementById('new-task-input').focus();
-        }
-
         function handleAddTask(e) {
             e.preventDefault();
             const input = document.getElementById('new-task-input');
-            const text = input.value.trim();
-            if (!text) return;
-            tasks.unshift({ id: Date.now(), text, category: currentFilter === "All" ? "Strategy" : currentFilter, completed: false });
+            const category = document.getElementById('new-task-category').value;
+            if (!input.value.trim()) return;
+            tasks.unshift({ id: Date.now(), text: input.value.trim(), category: category, completed: false });
             input.value = '';
+            toggleAddForm();
             saveTasks();
             renderTasks();
             updateStats();
@@ -220,27 +239,87 @@
             updateStats();
         }
 
+        function enterEditMode(id) {
+            editingId = id;
+            renderTasks();
+            setTimeout(() => {
+                const input = document.getElementById(`edit-${id}`);
+                if(input) { input.focus(); input.select(); }
+            }, 50);
+        }
+
+        function saveEdit(id) {
+            const input = document.getElementById(`edit-${id}`);
+            if (input) {
+                const newText = input.value.trim();
+                if (newText) {
+                    tasks = tasks.map(t => t.id === id ? { ...t, text: newText } : t);
+                    saveTasks();
+                }
+            }
+            editingId = null;
+            renderTasks();
+        }
+
+        function renderFilters() {
+            const container = document.getElementById('filter-container');
+            container.innerHTML = CATEGORIES.map(cat => `
+                <button onclick="setFilter('${cat}')" class="filter-btn px-4 py-1.5 rounded-xl text-[11px] font-semibold transition-all whitespace-nowrap ${currentFilter === cat ? "active-pill shadow-lg" : "text-white/40 hover:text-white"}">${cat.toUpperCase()}</button>
+            `).join('');
+        }
+
+        function setFilter(cat) { currentFilter = cat; renderFilters(); renderTasks(); }
+
+        function toggleAddForm() { document.getElementById('add-task-form').classList.toggle('hidden'); }
+
         function renderTasks() {
             const container = document.getElementById('task-list');
             const filtered = tasks.filter(t => currentFilter === "All" || t.category === currentFilter);
+            
             if (filtered.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 opacity-40 italic text-sm">No tasks in ${currentFilter}</div>`;
+                container.innerHTML = `<div class="text-center py-20 opacity-20 text-xs tracking-widest uppercase">No tasks in ${currentFilter}</div>`;
                 return;
             }
-            container.innerHTML = filtered.map(task => `
-                <div class="task-card group flex items-center gap-4 p-4 rounded-2xl border border-slate-800 transition-all ${task.completed ? "bg-slate-950 opacity-50" : "bg-slate-900 shadow-xl"}">
-                    <button onclick="toggleTask(${task.id})" class="shrink-0 ${task.completed ? "text-sky-500" : "text-slate-600"}">
-                        <i data-lucide="${task.completed ? 'check-circle-2' : 'circle'}" class="w-6 h-6"></i>
-                    </button>
-                    <div class="flex-1 min-w-0">
-                        <span class="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-slate-800 text-sky-400">${task.category}</span>
-                        <p class="text-sm md:text-base font-bold truncate ${task.completed ? "line-through text-slate-500" : "text-white"}">${task.text}</p>
+
+            container.innerHTML = filtered.map(task => {
+                const isEditing = editingId === task.id;
+                const categoryStyles = {
+                    'Urgent': 'text-red-400',
+                    'Technical': 'text-purple-400',
+                    'Creative': 'text-emerald-400',
+                    'Strategy': 'text-sky-400'
+                };
+                const colorClass = categoryStyles[task.category] || 'text-white/40';
+
+                return `
+                    <div class="task-card glass flex items-center gap-4 p-5 rounded-[1.5rem] ${task.completed ? "opacity-40" : ""}">
+                        <button onclick="toggleTask(${task.id})" class="checkbox-custom ${task.completed ? "checkbox-checked" : ""}">
+                            ${task.completed ? '<i data-lucide="check" class="w-3 h-3 text-black stroke-[4px]"></i>' : ''}
+                        </button>
+                        
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-0.5">
+                                <span class="text-[9px] font-black uppercase tracking-[0.2em] ${colorClass}">${task.category}</span>
+                            </div>
+                            
+                            ${isEditing ? `
+                                <input id="edit-${task.id}" type="text" value="${task.text}" 
+                                    onblur="saveEdit(${task.id})" 
+                                    onkeydown="if(event.key==='Enter') saveEdit(${task.id})"
+                                    class="edit-input" />
+                            ` : `
+                                <p onclick="enterEditMode(${task.id})" class="text-base font-medium truncate cursor-text ${task.completed ? "line-through text-white/30" : "text-white/90"}">
+                                    ${task.text}
+                                </p>
+                            `}
+                        </div>
+
+                        <button onclick="deleteTask(${task.id})" class="opacity-0 group-hover:opacity-100 p-2 text-white/20 hover:text-red-500 transition-all">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
                     </div>
-                    <button onclick="deleteTask(${task.id})" class="opacity-0 group-hover:opacity-100 p-2 text-slate-700 hover:text-red-500 transition-all">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             lucide.createIcons();
         }
 
@@ -249,14 +328,13 @@
             const done = tasks.filter(t => t.completed).length;
             const progress = total > 0 ? Math.round((done / total) * 100) : 0;
             document.getElementById('progress-bar').style.width = `${progress}%`;
-            document.getElementById('progress-text').innerText = `Progress: ${progress}%`;
-            document.getElementById('task-count-text').innerText = `${done} / ${total} Tasks Done`;
+            document.getElementById('progress-text').innerText = `${progress}% Complete`;
+            document.getElementById('task-count-text').innerText = `${done} / ${total} Tasks`;
             document.getElementById('stat-urgent').innerText = tasks.filter(t => t.category === "Urgent" && !t.completed).length;
             document.getElementById('stat-queue').innerText = tasks.filter(t => !t.completed).length;
             document.getElementById('stat-completed').innerText = done;
         }
 
-        // Init App
         window.onload = () => {
             loadTasks();
             renderFilters();
