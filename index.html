@@ -16,8 +16,20 @@
             background-attachment: fixed; color: #ffffff; -webkit-font-smoothing: antialiased; overflow-x: hidden;
         }
         .glass { background: var(--apple-card); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid var(--apple-border); }
-        .task-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .task-card:hover { background: rgba(44, 44, 46, 0.8); transform: translateY(-2px); border-color: rgba(255, 255, 255, 0.15); }
+        
+        .task-card { 
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease; 
+            cursor: grab;
+        }
+        .task-card:active { cursor: grabbing; }
+        .task-card.dragging {
+            opacity: 0.5;
+            transform: scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border-color: rgba(255, 255, 255, 0.3);
+            z-index: 50;
+        }
+
         .checkbox-custom { width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; cursor: pointer; }
         .checkbox-checked { background: #34c759; border-color: #34c759; box-shadow: 0 0 10px rgba(52, 199, 89, 0.3); }
         .edit-input { background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 6px 12px; border: 1px solid rgba(56, 189, 248, 0.3); color: white; width: 100%; outline: none; font-size: 1rem; }
@@ -26,13 +38,14 @@
         select { background-color: #1c1c1e; color: white; border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 12px; appearance: none; cursor: pointer; }
         select option { background-color: #1c1c1e; color: white; }
         ::-webkit-scrollbar { width: 0px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body class="min-h-screen pb-20">
 
     <div id="loading-overlay">
         <div class="w-10 h-10 border-2 border-white/10 border-t-white rounded-full animate-spin mb-6"></div>
-        <p id="loader-text" class="text-[10px] font-bold tracking-[0.4em] text-white/30 uppercase">Activating Workspace</p>
+        <p id="loader-text" class="text-[10px] font-bold tracking-[0.4em] text-white/30 uppercase">Syncing Workspace</p>
         <button id="skip-btn" onclick="hideLoader()" class="hidden mt-8 text-[10px] text-white/20 uppercase tracking-widest border border-white/10 px-4 py-2 rounded-full hover:bg-white/5 transition-all">Skip and Enter</button>
     </div>
 
@@ -40,17 +53,17 @@
         <header class="mb-14 text-center">
             <div class="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 shadow-sm">
                 <i data-lucide="zap" class="w-3.5 h-3.5 text-sky-400"></i>
-                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-white/60">Unified Dashboard v2.0</span>
+                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-white/60">Unified Dashboard v2.1</span>
             </div>
             <h1 class="text-6xl font-light tracking-tight mb-4 bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic text-center"> Roadmap </h1>
             <p id="current-date" class="text-sm text-white/20 font-medium tracking-wide lowercase text-center"></p>
         </header>
 
         <div class="grid grid-cols-4 gap-4 mb-12">
-            <div class="glass p-5 rounded-[2rem] text-center"><p class="text-[9px] uppercase tracking-widest text-white/30 mb-1">Urgent</p><p id="stat-urgent" class="text-2xl font-semibold text-red-500">0</p></div>
-            <div class="glass p-5 rounded-[2rem] text-center"><p class="text-[9px] uppercase tracking-widest text-white/30 mb-1">Queue</p><p id="stat-queue" class="text-2xl font-semibold">0</p></div>
-            <div class="glass p-5 rounded-[2rem] text-center"><p class="text-[9px] uppercase tracking-widest text-white/30 mb-1">Done</p><p id="stat-completed" class="text-2xl font-semibold text-emerald-400">0</p></div>
-            <div class="glass p-5 rounded-[2rem] flex flex-col items-center justify-center"><p class="text-[8px] uppercase tracking-widest text-white/20 mb-1" id="sync-label">Sync</p><div id="sync-indicator" class="w-2 h-2 rounded-full bg-orange-500"></div></div>
+            <div class="glass p-5 rounded-[2rem] text-center shadow-xl"><p class="text-[9px] uppercase tracking-widest text-white/30 mb-1">Urgent</p><p id="stat-urgent" class="text-2xl font-semibold text-red-500">0</p></div>
+            <div class="glass p-5 rounded-[2rem] text-center shadow-xl"><p class="text-[9px] uppercase tracking-widest text-white/30 mb-1">Queue</p><p id="stat-queue" class="text-2xl font-semibold">0</p></div>
+            <div class="glass p-5 rounded-[2rem] text-center shadow-xl"><p class="text-[9px] uppercase tracking-widest text-white/30 mb-1">Done</p><p id="stat-completed" class="text-2xl font-semibold text-emerald-400">0</p></div>
+            <div class="glass p-5 rounded-[2rem] flex flex-col items-center justify-center shadow-xl"><p class="text-[8px] uppercase tracking-widest text-white/20 mb-1" id="sync-label">Sync</p><div id="sync-indicator" class="w-2 h-2 rounded-full bg-orange-500"></div></div>
         </div>
 
         <div class="mb-12 px-2">
@@ -62,7 +75,7 @@
         </div>
 
         <div class="flex items-center justify-between mb-8">
-            <div id="filter-container" class="flex bg-white/5 p-1 rounded-2xl border border-white/5 overflow-x-auto"></div>
+            <div id="filter-container" class="flex bg-white/5 p-1 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar"></div>
             <button onclick="toggleAddForm()" class="w-12 h-12 flex items-center justify-center rounded-full bg-white text-black hover:scale-110 active:scale-90 shadow-2xl shrink-0"><i data-lucide="plus" class="w-6 h-6"></i></button>
         </div>
 
@@ -73,7 +86,11 @@
                     <div class="flex gap-2 items-center bg-white/5 px-4 py-2 rounded-2xl border border-white/5">
                         <span class="text-[10px] uppercase font-bold text-white/30">Category:</span>
                         <select id="new-task-category" class="bg-transparent text-xs text-white outline-none border-none p-0 pr-6">
-                            <option value="Urgent">Urgent</option><option value="Technical" selected>Technical</option><option value="Creative">Creative</option><option value="Strategy">Strategy</option>
+                            <option value="Urgent">Urgent</option>
+                            <option value="Technical" selected>Technical</option>
+                            <option value="Creative">Creative</option>
+                            <option value="Strategy">Strategy</option>
+                            <option value="Recurrent">Recurrent</option>
                         </select>
                     </div>
                     <button type="submit" class="bg-white text-black px-10 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-zinc-200 transition-all">Publish</button>
@@ -108,7 +125,7 @@
         let editingId = null;
 
         const timer = setTimeout(() => {
-            document.getElementById('loader-text').innerText = "Sync delayed. Check Anonymous Auth.";
+            document.getElementById('loader-text').innerText = "Sync slow. Check Firestore Rules.";
             document.getElementById('skip-btn').classList.remove('hidden');
         }, 5000);
 
@@ -129,7 +146,10 @@
                     if (user) {
                         const tasksRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks');
                         onSnapshot(query(tasksRef), (snapshot) => {
-                            tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            const rawTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                            // Sort by position field for drag and drop
+                            tasks = rawTasks.sort((a, b) => (a.position || 0) - (b.position || 0));
+                            
                             if (tasks.length === 0) seedInitialTasks();
                             document.getElementById('sync-indicator').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
                             document.getElementById('sync-label').innerText = "Cloud Active";
@@ -143,34 +163,16 @@
 
         async function seedInitialTasks() {
             const originalTasks = [
-                // Urgent
                 { text: "Enable WhatsApp in Meta", category: "Urgent", completed: false },
-                { text: "Pierre: Reactivate WhatsApp Groups", category: "Urgent", completed: false },
-                
-                // Technical
                 { text: "builderallworks: Fix Google tracking", category: "Technical", completed: false },
-                { text: "emailmarketingmastery: Fix Google tracking", category: "Technical", completed: false },
-                { text: "Optimize Google Ads (Intent Signals)", category: "Technical", completed: false },
-                { text: "Email Lead Flow Automation", category: "Technical", completed: false },
-                { text: "Small Business Page: Magic Funnel captures", category: "Technical", completed: false },
-                
-                // Creative
                 { text: "Real VSL Production", category: "Creative", completed: false },
-                { text: "Social Proof: Add website/subs stats", category: "Creative", completed: false },
-                { text: "Supercharge Bundle: Add specific paragraph", category: "Creative", completed: false },
-                { text: "Supercharge Bundle: Website Builder AD", category: "Creative", completed: false },
-                { text: "Test AI Video (IG Reference)", category: "Creative", completed: false },
-                { text: "Bulk Word Replace in Ads", category: "Creative", completed: false },
-                
-                // Strategy
-                { text: "Analyze Winning AI Ads performance", category: "Strategy", completed: false },
-                { text: "Template Expansion: Landing Pages", category: "Strategy", completed: false },
-                { text: "7 Dollar Sales Tripwire Review", category: "Strategy", completed: false },
-                { text: "Implement New Ad Structure", category: "Strategy", completed: false }
+                { text: "Implement New Ad Structure", category: "Strategy", completed: false },
+                { text: "Check Daily Ad Spend", category: "Recurrent", completed: false }
             ];
-            for (const t of originalTasks) {
+            for (let i = 0; i < originalTasks.length; i++) {
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'), { 
-                    ...t, 
+                    ...originalTasks[i], 
+                    position: i,
                     createdAt: serverTimestamp() 
                 });
             }
@@ -181,8 +183,13 @@
             const input = document.getElementById('new-task-input');
             const category = document.getElementById('new-task-category').value;
             if (!input.value.trim()) return;
+            const maxPos = tasks.length > 0 ? Math.max(...tasks.map(t => t.position || 0)) : 0;
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'), {
-                text: input.value.trim(), category, completed: false, createdAt: serverTimestamp()
+                text: input.value.trim(), 
+                category, 
+                completed: false, 
+                position: maxPos + 1,
+                createdAt: serverTimestamp()
             });
             input.value = '';
             toggleAddForm();
@@ -194,7 +201,6 @@
         };
 
         window.deleteTask = async (id) => {
-            // String ID for direct Firebase match
             await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', String(id)));
         };
 
@@ -215,6 +221,54 @@
             seedInitialTasks();
         };
 
+        // DRAG AND DROP LOGIC
+        let draggedItemId = null;
+
+        function handleDragStart(e) {
+            draggedItemId = e.currentTarget.dataset.id;
+            e.currentTarget.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+            const items = document.querySelectorAll('.task-card');
+            items.forEach(item => item.classList.remove('opacity-50'));
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        async function handleDrop(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            const targetId = e.currentTarget.dataset.id;
+            if (draggedItemId === targetId) return;
+
+            const newTasks = [...tasks];
+            const draggedIdx = newTasks.findIndex(t => t.id === draggedItemId);
+            const targetIdx = newTasks.findIndex(t => t.id === targetId);
+
+            const [removed] = newTasks.splice(draggedIdx, 1);
+            newTasks.splice(targetIdx, 0, removed);
+
+            // Update positions locally for immediate feedback
+            tasks = newTasks.map((t, idx) => ({ ...t, position: idx }));
+            refreshUI();
+
+            // Persist new positions to Firestore
+            const batch = writeBatch(db);
+            tasks.forEach((t, idx) => {
+                const ref = doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', t.id);
+                batch.update(ref, { position: idx });
+            });
+            await batch.commit();
+        }
+
+        // UI HELPERS
         window.enterEditMode = (id) => { editingId = id; refreshUI(); setTimeout(() => { const i = document.getElementById(`edit-${id}`); i?.focus(); i?.select(); }, 50); };
         window.setFilter = (cat) => { currentFilter = cat; refreshUI(); };
         window.toggleAddForm = () => document.getElementById('add-task-form').classList.toggle('hidden');
@@ -223,16 +277,26 @@
             const container = document.getElementById('task-list');
             const fTasks = tasks.filter(t => currentFilter === "All" || t.category === currentFilter);
             const filterContainer = document.getElementById('filter-container');
-            filterContainer.innerHTML = ["All", "Urgent", "Technical", "Creative", "Strategy"].map(cat => `<button onclick="setFilter('${cat}')" class="px-5 py-2 rounded-xl text-[10px] font-bold tracking-widest transition-all ${currentFilter === cat ? "active-pill" : "text-white/30 hover:text-white"} uppercase">${cat}</button>`).join('');
+            const CAT_LIST = ["All", "Urgent", "Technical", "Creative", "Strategy", "Recurrent"];
+            
+            filterContainer.innerHTML = CAT_LIST.map(cat => `<button onclick="setFilter('${cat}')" class="px-5 py-2 rounded-xl text-[10px] font-bold tracking-widest transition-all ${currentFilter === cat ? "active-pill" : "text-white/30 hover:text-white"} uppercase shrink-0">${cat}</button>`).join('');
 
             if (fTasks.length === 0) {
                 container.innerHTML = `<div class="text-center py-20 opacity-10 text-[10px] tracking-[0.5em] uppercase font-black">Clean Board</div>`;
             } else {
                 container.innerHTML = fTasks.map(task => {
-                    const colors = { 'Urgent': 'text-red-500', 'Technical': 'text-purple-400', 'Creative': 'text-emerald-400', 'Strategy': 'text-sky-400' };
+                    const colors = { 
+                        'Urgent': 'text-red-500', 
+                        'Technical': 'text-purple-400', 
+                        'Creative': 'text-emerald-400', 
+                        'Strategy': 'text-sky-400',
+                        'Recurrent': 'text-pink-400' 
+                    };
                     const isEditing = editingId === task.id;
                     return `
-                        <div class="task-card glass flex items-center gap-5 p-6 rounded-[2rem] ${task.completed ? "opacity-30 saturate-0" : ""}">
+                        <div class="task-card glass flex items-center gap-5 p-6 rounded-[2rem] ${task.completed ? "opacity-30 saturate-0" : ""}" 
+                             draggable="true" 
+                             data-id="${task.id}">
                             <button onclick="toggleTask('${task.id}')" class="checkbox-custom ${task.completed ? "checkbox-checked" : ""}">
                                 ${task.completed ? '<i data-lucide="check" class="w-3 h-3 text-black stroke-[4px]"></i>' : ''}
                             </button>
@@ -245,13 +309,22 @@
                         </div>
                     `;
                 }).join('');
+
+                // Attach drag events
+                const cards = container.querySelectorAll('.task-card');
+                cards.forEach(card => {
+                    card.addEventListener('dragstart', handleDragStart);
+                    card.addEventListener('dragover', handleDragOver);
+                    card.addEventListener('drop', handleDrop);
+                    card.addEventListener('dragend', handleDragEnd);
+                });
             }
             lucide.createIcons();
             const total = tasks.length, done = tasks.filter(t => t.completed).length;
             const progress = total > 0 ? Math.round((done/total)*100) : 0;
             document.getElementById('progress-bar').style.width = `${progress}%`;
             document.getElementById('progress-text').innerText = `${progress}% Team Progress`;
-            document.getElementById('task-count-text').innerText = `${done}/${total} Items`;
+            document.getElementById('task-count-text').innerText = `${done}/${total} Shared Items`;
             document.getElementById('stat-urgent').innerText = tasks.filter(t => t.category === "Urgent" && !t.completed).length;
             document.getElementById('stat-queue').innerText = tasks.filter(t => !t.completed).length;
             document.getElementById('stat-completed').innerText = done;
