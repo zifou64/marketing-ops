@@ -40,7 +40,6 @@
         
         .active-pill { background: white !important; color: black !important; box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2); }
         
-        /* FIXED: Dropdown visibility and text color */
         select { 
             background-color: #1c1c1e; 
             color: #ffffff !important; 
@@ -55,7 +54,6 @@
             background-size: 16px;
         }
 
-        /* Ensure options are visible even if system uses a light picker */
         select option { 
             background-color: #1c1c1e; 
             color: #ffffff; 
@@ -137,7 +135,7 @@
         <header class="mb-14 text-center">
             <div class="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 shadow-sm">
                 <i data-lucide="zap" class="w-3.5 h-3.5 text-sky-400"></i>
-                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-white/60">Unified Dashboard v2.6</span>
+                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-white/60">Unified Dashboard v2.7</span>
             </div>
             <h1 class="text-6xl font-light tracking-tight mb-4 bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic text-center text-white"> Roadmap </h1>
             <p id="current-date" class="text-sm text-white/20 font-medium tracking-wide lowercase text-center"></p>
@@ -246,7 +244,7 @@
                         onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks')), (snapshot) => {
                             const rawTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                             
-                            // SMART SORT: Active first, then by position
+                            // SMART SORT: Active first, then by position. Completed move to bottom.
                             tasks = rawTasks.sort((a, b) => {
                                 if (a.completed !== b.completed) return a.completed ? 1 : -1;
                                 return (a.position || 0) - (b.position || 0);
@@ -360,6 +358,12 @@
             refreshUI();
         };
 
+        // FIXED: Added cancelEdit to reset the editing state
+        window.cancelEdit = () => {
+            editingId = null;
+            refreshUI();
+        };
+
         window.clearAllData = async () => {
             if(!confirm("Wipe all tasks?")) return;
             const snapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'));
@@ -431,12 +435,12 @@
                                         <textarea id="edit-desc-${task.id}" class="edit-textarea" placeholder="Description...">${desc}</textarea>
                                         <div class="flex gap-2">
                                             <button onclick="saveEdit('${task.id}')" class="text-[9px] font-bold text-sky-400 uppercase tracking-widest">Save</button>
-                                            <button onclick="editingId=null;refreshUI();" class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Cancel</button>
+                                            <button onclick="window.cancelEdit()" class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Cancel</button>
                                         </div>
                                     </div>
                                 ` : `
                                     <span class="text-[9px] font-black uppercase tracking-[0.3em] ${colors[task.category] || 'text-white/40'} block mb-1">${task.category}</span>
-                                    <p onclick="enterEditMode('${task.id}')" class="text-base font-medium truncate cursor-pointer transition-colors hover:text-white leading-tight">
+                                    <p onclick="enterEditMode('${task.id}')" class="text-base font-medium truncate cursor-pointer transition-colors hover:text-white leading-tight text-white">
                                         ${task.text}
                                     </p>
                                     ${desc ? `<p class="text-xs text-white/30 mt-1 line-clamp-2">${desc}</p>` : ''}
