@@ -113,7 +113,7 @@
         <header class="mb-14 text-center">
             <div class="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 shadow-sm">
                 <i data-lucide="zap" class="w-3.5 h-3.5 text-sky-400"></i>
-                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-white/60">Unified Dashboard v2.4</span>
+                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-white/60">Unified Dashboard v2.5</span>
             </div>
             <h1 class="text-6xl font-light tracking-tight mb-4 bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic text-center"> Roadmap </h1>
             <p id="current-date" class="text-sm text-white/20 font-medium tracking-wide lowercase text-center"></p>
@@ -137,14 +137,13 @@
         <div class="flex items-center justify-between gap-4 mb-8">
             <div class="flex items-center gap-2 overflow-hidden">
                 <div id="filter-container" class="flex bg-white/5 p-1 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar"></div>
-                <button onclick="toggleCategoryModal(true)" class="p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-white/40 hover:text-sky-400 transition-colors shrink-0 shadow-sm" title="Settings">
+                <button onclick="toggleCategoryModal(true)" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-sky-400 transition-colors shrink-0 shadow-sm" title="Settings">
                     <i data-lucide="settings" class="w-4 h-4"></i>
                 </button>
             </div>
             <button onclick="toggleAddForm()" class="w-12 h-12 flex items-center justify-center rounded-full bg-white text-black hover:scale-110 active:scale-90 shadow-2xl shrink-0"><i data-lucide="plus" class="w-6 h-6"></i></button>
         </div>
 
-        <!-- Improved Add Task Form with Description -->
         <div id="add-task-form" class="hidden mb-10 glass p-8 rounded-[2.5rem] animate-in fade-in slide-in-from-top-4 duration-500 shadow-2xl">
             <form onsubmit="handleAddTask(event)" class="space-y-4">
                 <input id="new-task-input" type="text" placeholder="Task Title..." class="w-full bg-transparent text-2xl font-light outline-none border-b border-white/10 pb-2 focus:border-white/40 transition-colors placeholder:text-white/10" />
@@ -222,7 +221,17 @@
                         // Task Sync
                         onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks')), (snapshot) => {
                             const rawTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                            tasks = rawTasks.sort((a, b) => (a.position || 0) - (b.position || 0));
+                            
+                            // UPDATED SORT: Active tasks first, then sort by position field
+                            tasks = rawTasks.sort((a, b) => {
+                                // If completion status is different, active tasks (false) go on top
+                                if (a.completed !== b.completed) {
+                                    return a.completed ? 1 : -1;
+                                }
+                                // If status is same, sort by the manual position field
+                                return (a.position || 0) - (b.position || 0);
+                            });
+
                             if (tasks.length === 0 && categories.length > 0) seedInitialTasks();
                             document.getElementById('sync-indicator').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_12px_rgba(52,199,89,0.4)]";
                             document.getElementById('sync-label').innerText = "Cloud Sync";
