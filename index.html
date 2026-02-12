@@ -33,11 +33,12 @@
         .checkbox-custom { width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.2); display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; cursor: pointer; }
         .checkbox-checked { background: #34c759; border-color: #34c759; box-shadow: 0 0 10px rgba(52, 199, 89, 0.3); }
         .edit-input { background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 6px 12px; border: 1px solid rgba(56, 189, 248, 0.3); color: white; width: 100%; outline: none; font-size: 1rem; }
+        .edit-textarea { background: rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 6px 12px; border: 1px solid rgba(56, 189, 248, 0.2); color: rgba(255,255,255,0.7); width: 100%; outline: none; font-size: 0.85rem; min-height: 60px; resize: none; }
         .active-pill { background: white !important; color: black !important; box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2); }
+        
         #loading-overlay { position: fixed; inset: 0; background: #000; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.6s ease; }
         
         select { background-color: #1c1c1e; color: white; border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 12px; appearance: none; cursor: pointer; }
-        select option { background-color: #1c1c1e; color: white; }
         
         .edit-select {
             background: rgba(255, 255, 255, 0.05);
@@ -112,7 +113,7 @@
         <header class="mb-14 text-center">
             <div class="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 shadow-sm">
                 <i data-lucide="zap" class="w-3.5 h-3.5 text-sky-400"></i>
-                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-white/60">Unified Dashboard v2.3</span>
+                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-white/60">Unified Dashboard v2.4</span>
             </div>
             <h1 class="text-6xl font-light tracking-tight mb-4 bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic text-center"> Roadmap </h1>
             <p id="current-date" class="text-sm text-white/20 font-medium tracking-wide lowercase text-center"></p>
@@ -136,22 +137,25 @@
         <div class="flex items-center justify-between gap-4 mb-8">
             <div class="flex items-center gap-2 overflow-hidden">
                 <div id="filter-container" class="flex bg-white/5 p-1 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar"></div>
-                <button onclick="toggleCategoryModal(true)" class="p-2.5 rounded-xl bg-white/5 border border-white/10 text-white/40 hover:text-sky-400 transition-colors shrink-0 shadow-sm" title="Settings">
+                <button onclick="toggleCategoryModal(true)" class="p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-white/40 hover:text-sky-400 transition-colors shrink-0 shadow-sm" title="Settings">
                     <i data-lucide="settings" class="w-4 h-4"></i>
                 </button>
             </div>
             <button onclick="toggleAddForm()" class="w-12 h-12 flex items-center justify-center rounded-full bg-white text-black hover:scale-110 active:scale-90 shadow-2xl shrink-0"><i data-lucide="plus" class="w-6 h-6"></i></button>
         </div>
 
+        <!-- Improved Add Task Form with Description -->
         <div id="add-task-form" class="hidden mb-10 glass p-8 rounded-[2.5rem] animate-in fade-in slide-in-from-top-4 duration-500 shadow-2xl">
-            <form onsubmit="handleAddTask(event)" class="space-y-6">
-                <input id="new-task-input" type="text" placeholder="What needs to be done?" class="w-full bg-transparent text-2xl font-light outline-none border-b border-white/10 pb-4 focus:border-white/40 transition-colors placeholder:text-white/10" />
-                <div class="flex flex-wrap gap-4 justify-between items-center">
+            <form onsubmit="handleAddTask(event)" class="space-y-4">
+                <input id="new-task-input" type="text" placeholder="Task Title..." class="w-full bg-transparent text-2xl font-light outline-none border-b border-white/10 pb-2 focus:border-white/40 transition-colors placeholder:text-white/10" />
+                <textarea id="new-task-description" placeholder="Add details or description (optional)..." class="w-full bg-white/5 border border-white/5 rounded-2xl p-4 text-sm text-white/60 outline-none focus:border-white/20 transition-colors min-h-[80px]"></textarea>
+                
+                <div class="flex flex-wrap gap-4 justify-between items-center pt-2">
                     <div class="flex gap-2 items-center bg-white/5 px-4 py-2 rounded-2xl border border-white/5">
                         <span class="text-[10px] uppercase font-bold text-white/30">Category:</span>
                         <select id="new-task-category" class="bg-transparent text-xs text-white outline-none border-none p-0 pr-6"></select>
                     </div>
-                    <button type="submit" class="bg-white text-black px-10 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-zinc-200 transition-all">Publish Task</button>
+                    <button type="submit" class="bg-white text-black px-10 py-3 rounded-full text-xs font-black uppercase tracking-widest hover:bg-zinc-200 transition-all">Publish</button>
                 </div>
             </form>
         </div>
@@ -174,7 +178,8 @@
             projectId: "marketing-dashboard-77465",
             storageBucket: "marketing-dashboard-77465.firebasestorage.app",
             messagingSenderId: "740462399798",
-            appId: "1:740462399798:web:50ba6177743f35ae39e397"
+            appId: "1:740462399798:web:50ba6177743f35ae39e397",
+            measurementId: "G-TGVW8K1HXP"
         };
         
         const appId = 'zifou-marketing-team-2026';
@@ -182,13 +187,11 @@
         let categories = [];
         let currentFilter = "All";
         let editingId = null;
-        let isCloud = false;
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // Fail-safe Bypass Timer
         const bypassTimer = setTimeout(() => {
             const loaderText = document.getElementById('loader-text');
             if (loaderText) loaderText.innerText = "Sync slow. Check Firestore Rules.";
@@ -208,19 +211,16 @@
                 await signInAnonymously(auth);
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        isCloud = true;
-                        // Sync Categories
-                        const catsRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_categories');
-                        onSnapshot(query(catsRef), (snapshot) => {
+                        // Category Sync
+                        onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'shared_categories')), (snapshot) => {
                             categories = snapshot.docs.map(d => ({ id: d.id, name: d.data().name })).sort((a,b) => a.name.localeCompare(b.name));
                             if (categories.length === 0) seedInitialCategories();
                             refreshUI();
                             renderModalCategoryList();
                         });
 
-                        // Sync Tasks
-                        const tasksRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks');
-                        onSnapshot(query(tasksRef), (snapshot) => {
+                        // Task Sync
+                        onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks')), (snapshot) => {
                             const rawTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                             tasks = rawTasks.sort((a, b) => (a.position || 0) - (b.position || 0));
                             if (tasks.length === 0 && categories.length > 0) seedInitialTasks();
@@ -228,10 +228,10 @@
                             document.getElementById('sync-label').innerText = "Cloud Sync";
                             refreshUI();
                             hideLoader();
-                        }, (err) => { console.error(err); initLocal(); });
+                        }, (err) => { console.error(err); hideLoader(); });
                     }
                 });
-            } catch (e) { initLocal(); }
+            } catch (e) { console.error(e); hideLoader(); }
         }
 
         async function seedInitialCategories() {
@@ -242,29 +242,18 @@
         }
 
         async function seedInitialTasks() {
-            const initial = [
-                { text: "Enable WhatsApp in Meta", category: "Urgent", completed: false },
-                { text: "Fix Google tracking", category: "Technical", completed: false },
-                { text: "Finalize Real VSL", category: "Creative", completed: false }
+            const seed = [
+                { text: "Enable WhatsApp in Meta", description: "Business verification needed", category: "Urgent", completed: false },
+                { text: "Fix Google tracking", description: "builderallworks domain checking", category: "Technical", completed: false },
+                { text: "Real VSL Production", description: "Final edit for ads", category: "Creative", completed: false }
             ];
-            for (let i = 0; i < initial.length; i++) {
+            for (let i = 0; i < seed.length; i++) {
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'), { 
-                    ...initial[i], position: i, createdAt: serverTimestamp() 
+                    ...seed[i], position: i, createdAt: serverTimestamp() 
                 });
             }
         }
 
-        function initLocal() {
-            isCloud = false;
-            const saved = localStorage.getItem('local_roadmap_data');
-            tasks = saved ? JSON.parse(saved) : [{ id: "1", text: "Offline Mode. Changes stay local.", category: "Recurrent", completed: false }];
-            document.getElementById('sync-indicator').className = "w-2 h-2 rounded-full bg-blue-500";
-            document.getElementById('sync-label').innerText = "Local Safe";
-            refreshUI();
-            setTimeout(hideLoader, 500);
-        }
-
-        // CATEGORY HANDLERS
         window.toggleCategoryModal = (show) => {
             document.getElementById('category-modal').style.display = show ? 'flex' : 'none';
             if (show) { renderModalCategoryList(); document.getElementById('new-category-input').focus(); }
@@ -299,79 +288,58 @@
             lucide.createIcons();
         }
 
-        // TASK HANDLERS
         window.handleAddTask = async (e) => {
             e.preventDefault();
             const input = document.getElementById('new-task-input');
+            const descInput = document.getElementById('new-task-description');
             const category = document.getElementById('new-task-category').value;
-            const text = input.value.trim();
-            if (!text) return;
+            if (!input.value.trim()) return;
             const maxPos = tasks.length > 0 ? Math.max(...tasks.map(t => t.position || 0)) : 0;
-            if (isCloud) {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'), {
-                    text, category, completed: false, position: maxPos + 1, createdAt: serverTimestamp()
-                });
-            } else {
-                tasks.unshift({ id: String(Date.now()), text, category, completed: false, position: 0 });
-                localStorage.setItem('local_roadmap_data', JSON.stringify(tasks));
-                refreshUI();
-            }
+            await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'), {
+                text: input.value.trim(), 
+                description: descInput.value.trim(),
+                category, 
+                completed: false, 
+                position: maxPos + 1, 
+                createdAt: serverTimestamp()
+            });
             input.value = '';
+            descInput.value = '';
             toggleAddForm();
         };
 
         window.toggleTask = async (id) => {
             const t = tasks.find(x => x.id === id);
-            if (isCloud) {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', id), { completed: !t.completed });
-            } else {
-                tasks = tasks.map(t => String(t.id) === String(id) ? { ...t, completed: !t.completed } : t);
-                localStorage.setItem('local_roadmap_data', JSON.stringify(tasks));
-                refreshUI();
-            }
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', id), { completed: !t.completed });
         };
 
         window.deleteTask = async (id) => {
-            if (isCloud) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', String(id)));
-            } else {
-                tasks = tasks.filter(t => String(t.id) !== String(id));
-                localStorage.setItem('local_roadmap_data', JSON.stringify(tasks));
-                refreshUI();
-            }
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', String(id)));
         };
 
         window.saveEdit = async (id) => {
             const input = document.getElementById(`edit-${id}`);
+            const descInput = document.getElementById(`edit-desc-${id}`);
             const catSelect = document.getElementById(`edit-cat-${id}`);
             if (!input || !input.value.trim() || !catSelect) return;
-            const newText = input.value.trim();
-            const newCat = catSelect.value;
-            if (isCloud) {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', id), { text: newText, category: newCat });
-            } else {
-                tasks = tasks.map(t => String(t.id) === String(id) ? { ...t, text: newText, category: newCat } : t);
-                localStorage.setItem('local_roadmap_data', JSON.stringify(tasks));
-            }
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', id), { 
+                text: input.value.trim(),
+                description: descInput.value.trim(),
+                category: catSelect.value 
+            });
             editingId = null;
             refreshUI();
         };
 
         window.clearAllData = async () => {
-            if(!confirm("Wipe dashboard tasks?")) return;
-            if (isCloud) {
-                const snapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'));
-                const batch = writeBatch(db);
-                snapshot.docs.forEach(d => batch.delete(d.ref));
-                await batch.commit();
-                seedInitialTasks();
-            } else {
-                localStorage.removeItem('local_roadmap_data');
-                initLocal();
-            }
+            if(!confirm("Wipe all tasks?")) return;
+            const snapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'));
+            const batch = writeBatch(db);
+            snapshot.docs.forEach(d => batch.delete(d.ref));
+            await batch.commit();
+            seedInitialTasks();
         };
 
-        // DRAG AND DROP
         let draggedItemId = null;
         window.handleDragStart = (e) => { draggedItemId = e.currentTarget.dataset.id; e.currentTarget.classList.add('dragging'); };
         window.handleDragEnd = (e) => { e.currentTarget.classList.remove('dragging'); };
@@ -387,15 +355,11 @@
             newTasks.splice(targetIdx, 0, removed);
             tasks = newTasks.map((t, idx) => ({ ...t, position: idx }));
             refreshUI();
-            if (isCloud) {
-                const batch = writeBatch(db);
-                tasks.forEach((t, idx) => {
-                    batch.update(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', t.id), { position: idx });
-                });
-                await batch.commit();
-            } else {
-                localStorage.setItem('local_roadmap_data', JSON.stringify(tasks));
-            }
+            const batch = writeBatch(db);
+            tasks.forEach((t, idx) => {
+                batch.update(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', t.id), { position: idx });
+            });
+            await batch.commit();
         };
 
         window.enterEditMode = (id) => { editingId = id; refreshUI(); setTimeout(() => { const i = document.getElementById(`edit-${id}`); i?.focus(); i?.select(); }, 50); };
@@ -407,8 +371,10 @@
             const fTasks = tasks.filter(t => currentFilter === "All" || t.category === currentFilter);
             const filterContainer = document.getElementById('filter-container');
             const addTaskSelect = document.getElementById('new-task-category');
+            
             const catNames = categories.map(c => c.name);
             filterContainer.innerHTML = ["All", ...catNames].map(cat => `<button onclick="setFilter('${cat}')" class="px-5 py-2 rounded-xl text-[10px] font-bold tracking-widest transition-all ${currentFilter === cat ? "active-pill" : "text-white/30 hover:text-white"} uppercase shrink-0">${cat}</button>`).join('');
+
             if (addTaskSelect) addTaskSelect.innerHTML = catNames.map(cat => `<option value="${cat}">${cat}</option>`).join('');
 
             if (fTasks.length === 0) {
@@ -417,29 +383,40 @@
                 container.innerHTML = fTasks.map(task => {
                     const colors = { 'Urgent': 'text-red-500', 'Technical': 'text-purple-400', 'Creative': 'text-emerald-400', 'Strategy': 'text-sky-400', 'Recurrent': 'text-pink-400' };
                     const isEditing = editingId === task.id;
+                    const desc = task.description || "";
+                    
                     return `
-                        <div class="task-card glass flex items-center gap-5 p-6 rounded-[2rem] ${task.completed ? "opacity-30 saturate-0" : ""}" 
+                        <div class="task-card glass flex items-start gap-5 p-6 rounded-[2rem] ${task.completed ? "opacity-30 saturate-0" : ""}" 
                              draggable="true" ondragstart="handleDragStart(event)" ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragend="handleDragEnd(event)"
                              data-id="${task.id}">
-                            <button onclick="toggleTask('${task.id}')" class="checkbox-custom ${task.completed ? "checkbox-checked" : ""}">
+                            
+                            <button onclick="toggleTask('${task.id}')" class="checkbox-custom mt-1 shrink-0 ${task.completed ? "checkbox-checked" : ""}">
                                 ${task.completed ? '<i data-lucide="check" class="w-3 h-3 text-black stroke-[4px]"></i>' : ''}
                             </button>
+
                             <div class="flex-1 min-w-0">
                                 ${isEditing ? `
-                                    <div class="flex flex-col gap-2 w-full">
+                                    <div class="flex flex-col gap-3 w-full animate-in fade-in duration-200">
                                         <select id="edit-cat-${task.id}" class="edit-select">${catNames.map(c => `<option value="${c}" ${c === task.category ? 'selected' : ''}>${c}</option>`).join('')}</select>
-                                        <input id="edit-${task.id}" type="text" value="${task.text}" onkeydown="if(event.key==='Enter') saveEdit('${task.id}')" class="edit-input" />
-                                        <div class="flex gap-2 mt-1">
+                                        <input id="edit-${task.id}" type="text" value="${task.text}" class="edit-input" />
+                                        <textarea id="edit-desc-${task.id}" class="edit-textarea" placeholder="Description...">${desc}</textarea>
+                                        <div class="flex gap-2">
                                             <button onclick="saveEdit('${task.id}')" class="text-[9px] font-bold text-sky-400 uppercase tracking-widest">Save</button>
                                             <button onclick="editingId=null;refreshUI();" class="text-[9px] font-bold text-white/20 uppercase tracking-widest">Cancel</button>
                                         </div>
                                     </div>
                                 ` : `
                                     <span class="text-[9px] font-black uppercase tracking-[0.3em] ${colors[task.category] || 'text-white/40'} block mb-1">${task.category}</span>
-                                    <p onclick="enterEditMode('${task.id}')" class="text-base font-medium truncate cursor-pointer transition-colors hover:text-white">${task.text}</p>
+                                    <p onclick="enterEditMode('${task.id}')" class="text-base font-medium truncate cursor-pointer transition-colors hover:text-white leading-tight">
+                                        ${task.text}
+                                    </p>
+                                    ${desc ? `<p class="text-xs text-white/30 mt-1 line-clamp-2">${desc}</p>` : ''}
                                 `}
                             </div>
-                            <button onclick="deleteTask('${task.id}')" class="opacity-30 hover:opacity-100 p-2 text-white hover:text-red-500 transition-all"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            
+                            <button onclick="deleteTask('${task.id}')" class="opacity-30 hover:opacity-100 p-2 text-white hover:text-red-500 transition-all shrink-0">
+                                <i data-lucide="x" class="w-5 h-5"></i>
+                            </button>
                         </div>
                     `;
                 }).join('');
