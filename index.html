@@ -159,9 +159,14 @@
         <div class="flex items-center justify-between gap-4 mb-8">
             <div class="flex items-center gap-2 overflow-hidden">
                 <div id="filter-container" class="flex bg-white/5 p-1 rounded-2xl border border-white/5 overflow-x-auto no-scrollbar"></div>
-                <button onclick="toggleCategoryModal(true)" class="p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-white/40 hover:text-sky-400 transition-colors shrink-0 shadow-sm" title="Settings">
-                    <i data-lucide="settings" class="w-4 h-4"></i>
-                </button>
+                <div class="flex gap-1 shrink-0">
+                    <button onclick="autoOrganizeTasks()" class="p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-white/40 hover:text-emerald-400 transition-colors shadow-sm" title="Auto-Group by Category">
+                        <i data-lucide="wand-2" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="toggleCategoryModal(true)" class="p-2.5 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 text-white/40 hover:text-sky-400 transition-colors shadow-sm" title="Settings">
+                        <i data-lucide="settings" class="w-4 h-4"></i>
+                    </button>
+                </div>
             </div>
             <button onclick="toggleAddForm()" class="w-12 h-12 flex items-center justify-center rounded-full bg-white text-black hover:scale-110 active:scale-90 shadow-2xl shrink-0"><i data-lucide="plus" class="w-6 h-6"></i></button>
         </div>
@@ -208,6 +213,7 @@
         let categories = [];
         let currentFilter = "All";
         let editingId = null;
+        let isCloud = false;
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
@@ -232,16 +238,19 @@
                 await signInAnonymously(auth);
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
-                        // Category Sync
-                        onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'shared_categories')), (snapshot) => {
+                        isCloud = true;
+                        // Sync Categories
+                        const catsRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_categories');
+                        onSnapshot(query(catsRef), (snapshot) => {
                             categories = snapshot.docs.map(d => ({ id: d.id, name: d.data().name })).sort((a,b) => a.name.localeCompare(b.name));
                             if (categories.length === 0) seedInitialCategories();
                             refreshUI();
                             renderModalCategoryList();
                         });
 
-                        // Task Sync
-                        onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks')), (snapshot) => {
+                        // Sync Tasks
+                        const tasksRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks');
+                        onSnapshot(query(tasksRef), (snapshot) => {
                             const rawTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                             
                             // SMART SORT: Active first, then by position. Completed move to bottom.
@@ -269,18 +278,19 @@
         }
 
         async function seedInitialTasks() {
-            const seed = [
+            const initial = [
                 { text: "Enable WhatsApp in Meta", description: "Business verification needed", category: "Urgent", completed: false },
                 { text: "Fix Google tracking", description: "builderallworks domain checking", category: "Technical", completed: false },
                 { text: "Real VSL Production", description: "Final edit for ads", category: "Creative", completed: false }
             ];
-            for (let i = 0; i < seed.length; i++) {
+            for (let i = 0; i < initial.length; i++) {
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'), { 
-                    ...seed[i], position: i, createdAt: serverTimestamp() 
+                    ...initial[i], position: i, createdAt: serverTimestamp() 
                 });
             }
         }
 
+        // CATEGORY HANDLERS
         window.toggleCategoryModal = (show) => {
             document.getElementById('category-modal').style.display = show ? 'flex' : 'none';
             if (show) { renderModalCategoryList(); document.getElementById('new-category-input').focus(); }
@@ -315,6 +325,26 @@
             lucide.createIcons();
         }
 
+        // AUTO-SORT BY CATEGORY
+        window.autoOrganizeTasks = async () => {
+            if (tasks.length === 0) return;
+            
+            // 1. Separate Active and Completed
+            const active = tasks.filter(t => !t.completed).sort((a, b) => a.category.localeCompare(b.category));
+            const completed = tasks.filter(t => t.completed).sort((a, b) => (a.position || 0) - (b.position || 0));
+
+            // 2. Combine back with new positions
+            const reordered = [...active, ...completed];
+            
+            // 3. Batch Update Firestore
+            const batch = writeBatch(db);
+            reordered.forEach((t, idx) => {
+                batch.update(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', t.id), { position: idx });
+            });
+            await batch.commit();
+        };
+
+        // TASK HANDLERS
         window.handleAddTask = async (e) => {
             e.preventDefault();
             const input = document.getElementById('new-task-input');
@@ -322,6 +352,7 @@
             const category = document.getElementById('new-task-category').value;
             if (!input.value.trim()) return;
             const maxPos = tasks.length > 0 ? Math.max(...tasks.map(t => t.position || 0)) : 0;
+            
             await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'), {
                 text: input.value.trim(), 
                 description: descInput.value.trim(),
@@ -349,6 +380,7 @@
             const descInput = document.getElementById(`edit-desc-${id}`);
             const catSelect = document.getElementById(`edit-cat-${id}`);
             if (!input || !input.value.trim() || !catSelect) return;
+            
             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', id), { 
                 text: input.value.trim(),
                 description: descInput.value.trim(),
@@ -358,14 +390,13 @@
             refreshUI();
         };
 
-        // FIXED: Added cancelEdit to reset the editing state
         window.cancelEdit = () => {
             editingId = null;
             refreshUI();
         };
 
         window.clearAllData = async () => {
-            if(!confirm("Wipe all tasks?")) return;
+            if(!confirm("Wipe dashboard for EVERYONE?")) return;
             const snapshot = await getDocs(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'));
             const batch = writeBatch(db);
             snapshot.docs.forEach(d => batch.delete(d.ref));
@@ -373,6 +404,7 @@
             seedInitialTasks();
         };
 
+        // DRAG AND DROP
         let draggedItemId = null;
         window.handleDragStart = (e) => { draggedItemId = e.currentTarget.dataset.id; e.currentTarget.classList.add('dragging'); };
         window.handleDragEnd = (e) => { e.currentTarget.classList.remove('dragging'); };
@@ -381,13 +413,16 @@
             e.preventDefault();
             const targetId = e.currentTarget.dataset.id;
             if (draggedItemId === targetId) return;
+
             const newTasks = [...tasks];
             const draggedIdx = newTasks.findIndex(t => t.id === draggedItemId);
             const targetIdx = newTasks.findIndex(t => t.id === targetId);
             const [removed] = newTasks.splice(draggedIdx, 1);
             newTasks.splice(targetIdx, 0, removed);
+
             tasks = newTasks.map((t, idx) => ({ ...t, position: idx }));
             refreshUI();
+
             const batch = writeBatch(db);
             tasks.forEach((t, idx) => {
                 batch.update(doc(db, 'artifacts', appId, 'public', 'data', 'shared_tasks', t.id), { position: idx });
@@ -455,6 +490,7 @@
                 }).join('');
             }
             lucide.createIcons();
+            
             const total = tasks.length, done = tasks.filter(t => t.completed).length;
             const progress = total > 0 ? Math.round((done/total)*100) : 0;
             const pBar = document.getElementById('progress-bar');
