@@ -19,11 +19,13 @@
 
         .glass { background: var(--apple-card); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid var(--apple-border); }
         
+        /* FIXED: Only show grab cursor when the card is draggable (not in edit mode) */
         .task-card { 
             transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.3s ease; 
-            cursor: grab;
         }
-        .task-card:active { cursor: grabbing; }
+        .task-card[draggable="true"] { cursor: grab; }
+        .task-card[draggable="true"]:active { cursor: grabbing; }
+        
         .task-card.dragging {
             opacity: 0.5;
             transform: scale(1.02);
@@ -135,7 +137,7 @@
         <header class="mb-14 text-center">
             <div class="inline-flex items-center gap-2 mb-4 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 shadow-sm">
                 <i data-lucide="zap" class="w-3.5 h-3.5 text-sky-400"></i>
-                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-white/60">Unified Dashboard v2.7</span>
+                <span class="text-[10px] font-bold tracking-[0.25em] uppercase text-white/60">Unified Dashboard v2.8</span>
             </div>
             <h1 class="text-6xl font-light tracking-tight mb-4 bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic text-center text-white"> Roadmap </h1>
             <p id="current-date" class="text-sm text-white/20 font-medium tracking-wide lowercase text-center"></p>
@@ -239,21 +241,19 @@
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         isCloud = true;
-                        // Sync Categories
-                        const catsRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_categories');
-                        onSnapshot(query(catsRef), (snapshot) => {
+                        // Category Sync
+                        onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'shared_categories')), (snapshot) => {
                             categories = snapshot.docs.map(d => ({ id: d.id, name: d.data().name })).sort((a,b) => a.name.localeCompare(b.name));
                             if (categories.length === 0) seedInitialCategories();
                             refreshUI();
                             renderModalCategoryList();
                         });
 
-                        // Sync Tasks
-                        const tasksRef = collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks');
-                        onSnapshot(query(tasksRef), (snapshot) => {
+                        // Task Sync
+                        onSnapshot(query(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks')), (snapshot) => {
                             const rawTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                             
-                            // SMART SORT: Active first, then by position. Completed move to bottom.
+                            // SMART SORT: Active first, then by position
                             tasks = rawTasks.sort((a, b) => {
                                 if (a.completed !== b.completed) return a.completed ? 1 : -1;
                                 return (a.position || 0) - (b.position || 0);
@@ -278,19 +278,18 @@
         }
 
         async function seedInitialTasks() {
-            const initial = [
+            const seed = [
                 { text: "Enable WhatsApp in Meta", description: "Business verification needed", category: "Urgent", completed: false },
                 { text: "Fix Google tracking", description: "builderallworks domain checking", category: "Technical", completed: false },
                 { text: "Real VSL Production", description: "Final edit for ads", category: "Creative", completed: false }
             ];
-            for (let i = 0; i < initial.length; i++) {
+            for (let i = 0; i < seed.length; i++) {
                 await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'shared_tasks'), { 
-                    ...initial[i], position: i, createdAt: serverTimestamp() 
+                    ...seed[i], position: i, createdAt: serverTimestamp() 
                 });
             }
         }
 
-        // CATEGORY HANDLERS
         window.toggleCategoryModal = (show) => {
             document.getElementById('category-modal').style.display = show ? 'flex' : 'none';
             if (show) { renderModalCategoryList(); document.getElementById('new-category-input').focus(); }
@@ -455,7 +454,7 @@
                     
                     return `
                         <div class="task-card glass flex items-start gap-5 p-6 rounded-[2rem] ${task.completed ? "opacity-30 saturate-0" : ""}" 
-                             draggable="true" ondragstart="handleDragStart(event)" ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragend="handleDragEnd(event)"
+                             draggable="${!isEditing}" ondragstart="handleDragStart(event)" ondragover="handleDragOver(event)" ondrop="handleDrop(event)" ondragend="handleDragEnd(event)"
                              data-id="${task.id}">
                             
                             <button onclick="toggleTask('${task.id}')" class="checkbox-custom mt-1 shrink-0 ${task.completed ? "checkbox-checked" : ""}">
@@ -490,7 +489,6 @@
                 }).join('');
             }
             lucide.createIcons();
-            
             const total = tasks.length, done = tasks.filter(t => t.completed).length;
             const progress = total > 0 ? Math.round((done/total)*100) : 0;
             const pBar = document.getElementById('progress-bar');
