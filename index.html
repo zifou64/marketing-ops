@@ -329,7 +329,13 @@
             if (tasks.length === 0) return;
             
             // 1. Separate Active and Completed
-            const active = tasks.filter(t => !t.completed).sort((a, b) => a.category.localeCompare(b.category));
+            const active = tasks.filter(t => !t.completed).sort((a, b) => {
+                // Force "Urgent" category to the very top
+                if (a.category === "Urgent" && b.category !== "Urgent") return -1;
+                if (b.category === "Urgent" && a.category !== "Urgent") return 1;
+                // Sort the rest alphabetically
+                return a.category.localeCompare(b.category);
+            });
             const completed = tasks.filter(t => t.completed).sort((a, b) => (a.position || 0) - (b.position || 0));
 
             // 2. Combine back with new positions
